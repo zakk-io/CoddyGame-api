@@ -1,0 +1,15 @@
+###register 
+POST http://127.0.0.1:3000/api/auth/register
+Content-Type: application/json
+
+{
+    "username": "7za8kk",
+    "email" : "7gorwanda74@gmail.com",
+    "password": "t1estpassU24ord",
+    "first_name": "Test",
+    "last_name": "User"
+}
+
+
+###email verify
+GET http://127.0.0.1:3000/api/auth/email-verify/d3fa109c-8ea5-44ab-9d8c-74dd4f574459
