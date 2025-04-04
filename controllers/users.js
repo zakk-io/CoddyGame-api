@@ -57,6 +57,7 @@ const registerUser = async (req, res,next) => {
 
         return res.status(201).json({
             "status": "success",
+            "code" : "201",
             "message": "User created successfully",
             "data": {
                 "email": user.email,
@@ -98,7 +99,20 @@ const emailVerfiy = async (req,res,next) => {
             { $set: { email_verified: true } }
         );
 
-        return res.redirect("/login")
+        return res.status(200).json({
+            "status": "success",
+            "code" : "200",
+            "message": "account verified successfully",
+            "data": {
+                "email": user.email,
+                "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "avatar" : user.avatar,
+                "email_verified": user.email_verified,
+            }
+        })
+
 
     } catch (error) {
         console.log(error)

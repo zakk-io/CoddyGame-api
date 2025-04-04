@@ -49,6 +49,17 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+
+    provider: {
+        type: String,
+        enum: ['local', 'google', 'github'],
+        default: 'local'
+    },
+
+    googleId: {
+        type: String,
+        required: false
+    }
 });
 
 
