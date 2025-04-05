@@ -3,6 +3,7 @@ const {Users,emailVerificationModel} = require("../models/users")
 const {passwordValidators,genrateUserAvatar} = require("../utilities")
 const uuid = require("uuid")
 const nodemailer = require("nodemailer");
+const jwt = require("jsonwebtoken")
 require("dotenv").config()
 
 
@@ -70,7 +71,6 @@ const registerUser = async (req, res,next) => {
         })
 
     } catch (error) {
-        console.log(error)
         next(error) 
     }
 }
@@ -103,20 +103,94 @@ const emailVerfiy = async (req,res,next) => {
             "status": "success",
             "code" : "200",
             "message": "account verified successfully",
-            "data": {
-                "email": user.email,
-                "username": user.username,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "avatar" : user.avatar,
-                "email_verified": user.email_verified,
-            }
+            "details": "you can now login to your account"
         })
 
 
     } catch (error) {
-        console.log(error)
         next(error)  
+    }
+}
+
+
+const loginUser = async (req,res,next) => {
+    try {
+        const {email,password} = req.body
+        
+        if(!email || !password){
+            return res.status(400).json({
+                "status": "fail",
+                "code" : "400",
+                "type" : "field Validation errors",
+                "message": "email and password are required"
+            })
+        }
+
+        const user = await Users.findOne({email})
+
+        if(!user){
+            return res.status(401).json({
+                "status": "fail",
+                "code" : "401",
+                "type" : "authentication error",
+                "message": "invalid email or password"
+            })
+        }
+
+        if(user.email_verified === false){
+            return res.status(403).json({
+                "status": "fail",
+                "code" : "403",
+                "type" : "authentication error",
+                "message": "your account is not verified",
+                "details": "we send you a verification link to your email, please check your email and verify your account"
+            })
+        }
+
+
+        if(bcrypt.compare(password,user.password)){
+
+            const payload = {
+                email : user.email,
+                username : user.username,
+                first_name : user.first_name,
+                last_name : user.last_name,
+                avatar : user.avatar,
+                email_verified : user.email_verified,
+            }
+            const jwt_token = jwt.sign(payload, process.env.JWT_SECRET,{expiresIn : "7d"})
+            res.cookie("jwt_token", jwt_token, {
+                httpOnly: true,
+                secure: false, // Set to true (in production)
+                sameSite: "lax",
+                maxAge: 7 * 24 * 60 * 60 * 1000 
+            })
+
+            return res.status(200).json({
+                "status": "success",
+                "code" : "200",
+                "message": "login successfully",
+                "data": {
+                    "email": user.email,
+                    "username": user.username,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "avatar" : user.avatar,
+                    "email_verified": user.email_verified,
+                }
+            })
+        }
+
+        return res.status(401).json({
+            "status": "fail",
+            "code" : "401",
+            "type" : "authentication error",
+            "message": "invalid email or password"
+        })
+
+    } catch (error) {
+        console.log(error)
+        next(error)
     }
 }
 
@@ -124,7 +198,8 @@ const emailVerfiy = async (req,res,next) => {
 
 module.exports = {
     registerUser,
-    emailVerfiy
+    emailVerfiy,
+    loginUser
 }
 
 

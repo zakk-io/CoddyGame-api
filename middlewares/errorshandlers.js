@@ -28,7 +28,7 @@ const validationError = (err,req,res,next) => {
 
 
 
-const duplicateError = (err,req,res,next) => {
+const valueDublictionsError = (err,req,res,next) => {
     if(err.name === "MongoServerError" && err.code === 11000){
         return res.status(400).json({
             "status": "fail",
@@ -45,5 +45,5 @@ const duplicateError = (err,req,res,next) => {
 module.exports = {
     jsonValidtion,
     validationError,
-    duplicateError
+    valueDublictionsError
 }

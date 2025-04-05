@@ -3,15 +3,15 @@ const app = express();
 const mongoose = require('mongoose');
 require("dotenv").config()
 const path = require('path');
-const {jsonValidtion,validationError,duplicateError} = require("./middlewares/errorshandlers")
-const userRoutes = require("./routes/users")
+const {jsonValidtion,validationError,valueDublictionsError} = require("./middlewares/errorshandlers")
+const authenticationRoutes = require("./routes/authentication")
 const cookieparser = require("cookie-parser")
 
 // Middlewares
 app.use(express.json());
 app.use(cookieparser())
 app.use(express.static('public'));
-app.use(userRoutes)
+app.use(authenticationRoutes)
 
 
 // mongodb connection
@@ -40,4 +40,4 @@ app.listen(3000, () => {
 //errors Middlewares
 app.use(jsonValidtion)
 app.use(validationError)
-app.use(duplicateError)
+app.use(valueDublictionsError)

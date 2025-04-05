@@ -7,7 +7,7 @@ const jwt = require("jsonwebtoken")
 const axios = require("axios")
 
 
-
+// google OAuth2
 const googleOAuth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_Client_ID,
     process.env.GOOGLE_Client_SECRET,
@@ -29,7 +29,7 @@ const googleOAuth2 = async (req,res) => {
         
         res.cookie("google_oauth_state", google_oauth_state, {
             httpOnly: true,
-            secure: false, // Set to true if using HTTPS
+            secure: false, // Set to true (in production)
             sameSite: "lax",
         })
 
@@ -117,8 +117,12 @@ const googleOAuth2Callback = async (req,res) => {
 
 
 
+
+
+
+
 module.exports = {
     googleOAuth2,
-    googleOAuth2Callback
+    googleOAuth2Callback,
 }
 
