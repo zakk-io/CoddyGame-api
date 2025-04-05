@@ -119,8 +119,6 @@ const googleOAuth2Callback = async (req,res) => {
 
 
 
-
-
 module.exports = {
     googleOAuth2,
     googleOAuth2Callback,

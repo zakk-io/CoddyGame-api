@@ -116,7 +116,7 @@ const emailVerfiy = async (req,res,next) => {
 const loginUser = async (req,res,next) => {
     try {
         const {email,password} = req.body
-        
+
         if(!email || !password){
             return res.status(400).json({
                 "status": "fail",
@@ -195,11 +195,26 @@ const loginUser = async (req,res,next) => {
 }
 
 
+const logoutUser = async (req,res,next) => {
+    try {
+        res.clearCookie("jwt_token")
+        return res.status(200).json({
+            "status": "success",
+            "code" : "200",
+            "message": "logout successfully"
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+
 
 module.exports = {
     registerUser,
     emailVerfiy,
-    loginUser
+    loginUser,
+    logoutUser
 }
 
 

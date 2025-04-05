@@ -23,3 +23,8 @@ Content-Type: application/json
     "email" : "mozakk.io@gmail.com",
     "password": "testpassU24ord"
 }
+
+
+### login user
+GET http://127.0.0.1:3000/api/auth/logout
+
