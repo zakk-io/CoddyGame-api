@@ -25,6 +25,12 @@ Content-Type: application/json
 }
 
 
-### login user
+### logout user
 GET http://127.0.0.1:3000/api/auth/logout
 
+
+
+
+### welcome
+GET http://127.0.0.1:3000/welcome
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1vemFray5pb0BnbWFpbC5jb20iLCJ1c2VybmFtZSI6Im1vemFray5pbyIsImZpcnN0X25hbWUiOiJtby4iLCJsYXN0X25hbWUiOiJ6YWtrIiwiYXZhdGFyIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSzNQaWFtNHB0ejBjT0t0dmlvRERnM2RVMVd2Vmc2MjdYcXBLN0JDbGxXaG1mRVpBPXM5Ni1jIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImlhdCI6MTc0Mzk2OTg4MCwiZXhwIjoxNzQ0NTc0NjgwfQ.zHkZz8uVhxdpNetwkQ0BTb5ryFMjnKlvWt8LkhFvzUg

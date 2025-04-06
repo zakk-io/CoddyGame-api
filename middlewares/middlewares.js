@@ -1,6 +1,6 @@
 const {rateLimit} = require("express-rate-limit")
-
-
+const jwt = require("jsonwebtoken")
+require("dotenv").config()
 
 
 const registerUserLimiter = rateLimit({
@@ -32,8 +32,62 @@ const loginUserLimiter = rateLimit({
 })
 
 
+
+const authMiddleware = (req,res,next) => {
+    try {
+        let token = req.cookies.jwt_token
+        if(!token){
+            if(req.headers.authorization && req.headers.authorization.startsWith("Bearer")){
+                token = req.headers.authorization.split(" ")[1]  
+            }
+        }
+
+        const payload = jwt.verify(token,process.env.JWT_SECRET)
+        req.user = payload
+        next()
+
+    } catch (error) {
+        if(error.name === "TokenExpiredError"){
+            return res.status(401).json({
+                "status":"fail",
+                "code":401,
+                "type":"authentication error",
+                "message": "Jwt Token expired"
+            })
+
+        }
+
+        if(error.name === "JsonWebTokenError"){
+            return res.status(401).json({
+                "status":"fail",
+                "code":401,
+                "type":"authentication error",
+                "message": error.message
+            })
+        }
+
+        if(error instanceof SyntaxError){
+            return res.status(401).json({
+                "status":"fail",
+                "code":401,
+                "type":"authentication error",
+                "message": "Malformed Jwt token"
+            })
+        }
+        
+        return res.status(500).json({
+            "status":"fail",
+            "code":500,
+            "type":"server error",
+            "message": error.message
+        })
+    }
+}
+
+
 module.exports = {
     registerUserLimiter,
-    loginUserLimiter
+    loginUserLimiter,
+    authMiddleware
 }
 

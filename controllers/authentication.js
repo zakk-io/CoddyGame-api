@@ -170,14 +170,7 @@ const loginUser = async (req,res,next) => {
                 "status": "success",
                 "code" : "200",
                 "message": "login successfully",
-                "data": {
-                    "email": user.email,
-                    "username": user.username,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "avatar" : user.avatar,
-                    "email_verified": user.email_verified,
-                }
+                "jwt_token": jwt_token,
             })
         }
 

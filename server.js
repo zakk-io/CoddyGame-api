@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 require("dotenv").config()
 const path = require('path');
 const {jsonValidtion,validationError,valueDublictionsError} = require("./middlewares/errorshandlers")
+const {authMiddleware} = require("./middlewares/middlewares")
+
 const authenticationRoutes = require("./routes/authentication")
 const cookieparser = require("cookie-parser")
 
@@ -18,8 +20,8 @@ app.use(authenticationRoutes)
 mongoose.connect(process.env.MONGO_URI).then(() => console.log('mongodb connected!'));
 
 // hello world route
-app.get('/hello-world', (req, res) => {
-    res.json({"message" : 'Hello World 🚀'});
+app.get('/welcome',[authMiddleware], (req, res) => {
+    res.json({"message" : `Welcome ${req.user.username} 🚀`});
 });
 // hello world  route
 

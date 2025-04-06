@@ -41,7 +41,7 @@ const googleOAuth2 = async (req,res) => {
 }
 
 
-const googleOAuth2Callback = async (req,res) => {
+const googleOAuth2Callback = async (req,res,next) => {
     try {
         const code = req.query.code
         const google_oauth_state = req.cookies.google_oauth_state
@@ -79,6 +79,21 @@ const googleOAuth2Callback = async (req,res) => {
             await user.save()
         }
 
+        //maybe user updated it is google account, we need to update it is account in the platform
+        await Users.updateOne({googleId : user_data.id}, {
+            $set: {
+                email : user_data.email,
+                username : user_data.email.split("@")[0],
+                password : uuid.v4(),
+                first_name : user_data.given_name,
+                last_name : user_data.family_name,
+                avatar: user_data.picture,
+                email_verified : true,
+                provider : "google",
+                googleId : user_data.id
+            }
+        })
+
         const payload = {
             email : user_data.email,
             username : user_data.email.split("@")[0],
@@ -99,19 +114,12 @@ const googleOAuth2Callback = async (req,res) => {
             "status": "success",
             "code" : "201",
             "message": "User created successfully",
-            "data": {
-                "email": user.email,
-                "username": user.username,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "avatar" : user.avatar,
-                "email_verified": user.email_verified,
-            }
+            "jwt_token": jwt_token,
         })
 
     } catch (error) {
         console.log(error)
-        res.json(error)
+        next(error)
     }
 }
 
