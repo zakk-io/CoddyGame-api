@@ -59,6 +59,11 @@ const userSchema = new mongoose.Schema({
     googleId: {
         type: String,
         required: false
+    },
+
+    linkedinId : {
+        type: String,
+        required: false 
     }
 });
 

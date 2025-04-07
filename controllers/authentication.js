@@ -71,7 +71,9 @@ const registerUser = async (req, res,next) => {
         })
 
     } catch (error) {
-        next(error) 
+        console.log(error)
+
+        next(error)
     }
 }
 
@@ -108,7 +110,8 @@ const emailVerfiy = async (req,res,next) => {
 
 
     } catch (error) {
-        next(error)  
+        console.log(error)
+        next(error) 
     }
 }
 
@@ -148,7 +151,8 @@ const loginUser = async (req,res,next) => {
         }
 
 
-        if(bcrypt.compare(password,user.password)){
+        const isMatch = await bcrypt.compare(password, user.password);
+        if(isMatch){
 
             const payload = {
                 email : user.email,
@@ -197,7 +201,12 @@ const logoutUser = async (req,res,next) => {
             "message": "logout successfully"
         })
     } catch (error) {
-        next(error)
+        return res.status(500).json({
+            "status":"fail",
+            "code":500,
+            "type":"server error",
+            "message": error.message
+        })
     }
 }
 

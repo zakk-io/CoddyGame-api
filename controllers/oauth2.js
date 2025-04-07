@@ -35,8 +35,12 @@ const googleOAuth2 = async (req,res) => {
 
         return res.redirect(authUrl)
     } catch (error) {
-        console.log(error)
-        res.json(error)
+        return res.status(500).json({
+            "status":"fail",
+            "code":500,
+            "type":"server error",
+            "message": error.message
+        })
     }
 }
 
@@ -63,7 +67,18 @@ const googleOAuth2Callback = async (req,res,next) => {
 
         const user_data = response.data
         
-        let user = await Users.findOne({googleId : user_data.id})
+        let user = await Users.findOneAndUpdate({googleId : user_data.id},{
+            $set : {
+                email : user_data.email,
+                username : user_data.email.split("@")[0],
+                password : uuid.v4(),
+                first_name : user_data.given_name,
+                last_name : user_data.family_name,
+                avatar: user_data.picture,
+                googleId : user_data.id
+            }
+        },{new : true})
+
         if(!user){
             user = new Users({
                 email : user_data.email,
@@ -78,21 +93,6 @@ const googleOAuth2Callback = async (req,res,next) => {
             })
             await user.save()
         }
-
-        //maybe user updated it is google account, we need to update it is account in the platform
-        await Users.updateOne({googleId : user_data.id}, {
-            $set: {
-                email : user_data.email,
-                username : user_data.email.split("@")[0],
-                password : uuid.v4(),
-                first_name : user_data.given_name,
-                last_name : user_data.family_name,
-                avatar: user_data.picture,
-                email_verified : true,
-                provider : "google",
-                googleId : user_data.id
-            }
-        })
 
         const payload = {
             email : user_data.email,
@@ -124,11 +124,129 @@ const googleOAuth2Callback = async (req,res,next) => {
 }
 
 
+const linkedinOAuth2 = async (req,res) => {
+    try {
+      const linkedin_oauth_state = uuid.v4()
+      const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${process.env.LINKEDIN_Client_ID}&redirect_uri=${encodeURIComponent(process.env.LINKEDIN_CALLBACK_URI)}&state=${linkedin_oauth_state}&scope=openid%20profile%20email`;
+
+
+      res.cookie("linkedin_oauth_state", linkedin_oauth_state, {
+        httpOnly: true,
+        secure: false, // Set to true (in production)
+        sameSite: "lax",
+      })
+
+    return res.redirect(authUrl)
+    } catch (error) {
+        return res.status(500).json({
+            "status":"fail",
+            "code":500,
+            "type":"server error",
+            "message": error.message
+        })
+    }
+}
+
+
+const linkedinOAuth2Callback = async (req,res,next) => {
+    try {
+        const linkedin_oauth_state = req.cookies.linkedin_oauth_state
+        const state = req.query.state
+        if(linkedin_oauth_state !== state){
+            return res.status(401).json({
+                "success" : false,
+                "code" : 401,
+                "type" : "OAuth2 error",
+                "message" : "Invalid state parameter"
+            })
+        }
+
+        const code = req.query.code
+        const tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
+            params: {
+              grant_type: 'authorization_code',
+              code: code,
+              redirect_uri: process.env.LINKEDIN_CALLBACK_URI,
+              client_id: process.env.LINKEDIN_Client_ID,
+              client_secret: process.env.LINKEDIN_Client_SECRET,
+            },
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          });
+        const access_token = tokenResponse.data.access_token;
+
+        const useResponse = await axios.get('https://api.linkedin.com/v2/userinfo', {
+            headers: {
+            Authorization: `Bearer ${access_token}`
+        }
+        })
+        const user_data = useResponse.data
+
+
+        let user = await Users.findOneAndUpdate({linkedinId : user_data.sub},{
+            $set : {
+                email : user_data.email,
+                username : user_data.email.split("@")[0],
+                password : uuid.v4(),
+                first_name : user_data.given_name,
+                last_name : user_data.family_name,
+                avatar: user_data.picture,
+                linkedinId : user_data.sub
+            }
+        },{new : true})
+
+        if(!user){
+            user = new Users({
+                email : user_data.email,
+                username : user_data.email.split("@")[0],
+                password : uuid.v4(),
+                first_name : user_data.given_name,
+                last_name : user_data.family_name,
+                avatar: user_data.picture,
+                email_verified : true,
+                provider : "linkedin",
+                linkedinId : user_data.sub
+            })
+            await user.save()
+        }
+
+        const payload = {
+            email : user_data.email,
+            username : user_data.email.split("@")[0],
+            first_name : user_data.given_name,
+            last_name : user_data.family_name,
+            avatar: user_data.picture
+        }
+
+        const jwt_token = jwt.sign(payload, process.env.JWT_SECRET,{expiresIn : "7d"})
+        res.cookie("jwt_token", jwt_token, {
+            httpOnly: true,
+            secure: false, // Set to true (in production)
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000 
+        })
+
+        return res.status(201).json({
+            "status": "success",
+            "code" : "201",
+            "message": "User created successfully",
+            "jwt_token": jwt_token,
+        })
+
+    } catch (error) {
+        console.log(error)
+        next(error) 
+    }
+}
+
 
 
 
 module.exports = {
     googleOAuth2,
     googleOAuth2Callback,
+    linkedinOAuth2,
+    linkedinOAuth2Callback
 }
 
