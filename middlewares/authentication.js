@@ -12,6 +12,7 @@ const registerUserLimiter = rateLimit({
         "status":"fail",
         "code":429,
         "type":"rate limit error",
+        "resource" : "users",
         "message":"too many account registration attempts, please try again after 15 minutes"
     }
 })
@@ -27,6 +28,7 @@ const loginUserLimiter = rateLimit({
         "status":"fail",
         "code":429,
         "type":"rate limit error",
+        "resource" : "users",
         "message":"too many login attempts, please try again after 15 minutes"
     }
 })
@@ -35,15 +37,14 @@ const loginUserLimiter = rateLimit({
 
 const authMiddleware = (req,res,next) => {
     try {
-        let token = req.cookies.jwt_token
-        if(!token){
-            if(req.headers.authorization && req.headers.authorization.startsWith("Bearer")){
-                token = req.headers.authorization.split(" ")[1]  
-            }
+        let token
+        if(req.headers.authorization && req.headers.authorization.startsWith("Bearer")){
+            token = req.headers.authorization.split(" ")[1]  
         }
 
         const payload = jwt.verify(token,process.env.JWT_SECRET)
         req.user = payload
+
         next()
 
     } catch (error) {

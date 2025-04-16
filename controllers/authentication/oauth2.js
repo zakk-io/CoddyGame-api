@@ -1,5 +1,5 @@
-const {Users} = require("../models/users")
-const {genrateUserAvatar} = require("../utilities")
+const {Users} = require("../../models/users")
+const {genrateUserAvatar} = require("../../utilities")
 const uuid = require("uuid")
 require("dotenv").config()
 const {google} = require("googleapis")
@@ -95,6 +95,7 @@ const googleOAuth2Callback = async (req,res,next) => {
         }
 
         const payload = {
+            id : user._id,
             email : user_data.email,
             username : user_data.email.split("@")[0],
             first_name : user_data.given_name,
@@ -210,8 +211,9 @@ const linkedinOAuth2Callback = async (req,res,next) => {
             })
             await user.save()
         }
-
+        
         const payload = {
+            id : user._id,
             email : user_data.email,
             username : user_data.email.split("@")[0],
             first_name : user_data.given_name,

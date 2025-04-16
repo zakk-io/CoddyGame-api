@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt")
-const {Users,emailVerificationModel} = require("../models/users")
-const {passwordValidators,genrateUserAvatar} = require("../utilities")
+const {Users,emailVerificationModel} = require("../../models/users")
+const {passwordValidators,genrateUserAvatar} = require("../../utilities")
 const uuid = require("uuid")
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken")
@@ -53,7 +53,7 @@ const registerUser = async (req, res,next) => {
             from: '"CoddyGame 🚀" <coddygame1@gmail.com>', 
             to: user.email,
             subject: "Please verify your email",
-            html: `<a href="http://127.0.0.1:3000/api/auth/email-verify/${emailVerification.token}">verify email</a>`,
+            html: `<a href="${process.env.BASE_URI}/api/auth/email-verify/${emailVerification.token}">verify email</a>`,
         });
 
         return res.status(201).json({
@@ -155,6 +155,7 @@ const loginUser = async (req,res,next) => {
         if(isMatch){
 
             const payload = {
+                id : user._id,
                 email : user.email,
                 username : user.username,
                 first_name : user.first_name,
@@ -162,8 +163,8 @@ const loginUser = async (req,res,next) => {
                 avatar : user.avatar,
                 email_verified : user.email_verified,
             }
-            const jwt_token = jwt.sign(payload, process.env.JWT_SECRET,{expiresIn : "7d"})
-            res.cookie("jwt_token", jwt_token, {
+            const authToken = jwt.sign(payload, process.env.JWT_SECRET,{expiresIn : "7d"})
+            res.cookie("authToken", authToken, {
                 httpOnly: true,
                 secure: false, // Set to true (in production)
                 sameSite: "lax",
@@ -174,7 +175,7 @@ const loginUser = async (req,res,next) => {
                 "status": "success",
                 "code" : "200",
                 "message": "login successfully",
-                "jwt_token": jwt_token,
+                "authToken": authToken,
             })
         }
 
@@ -192,9 +193,9 @@ const loginUser = async (req,res,next) => {
 }
 
 
-const logoutUser = async (req,res,next) => {
+const logoutUser = async (req,res) => {
     try {
-        res.clearCookie("jwt_token")
+        res.clearCookie("authToken")
         return res.status(200).json({
             "status": "success",
             "code" : "200",
@@ -212,11 +213,14 @@ const logoutUser = async (req,res,next) => {
 
 
 
+
+
+
 module.exports = {
     registerUser,
     emailVerfiy,
     loginUser,
-    logoutUser
+    logoutUser,
 }
 
 

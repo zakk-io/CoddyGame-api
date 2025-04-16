@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const {registerUser,emailVerfiy,loginUser,logoutUser} = require('../controllers/authentication');
-const {googleOAuth2,googleOAuth2Callback,linkedinOAuth2,linkedinOAuth2Callback} = require('../controllers/oauth2');
-const {registerUserLimiter,loginUserLimiter} = require('../middlewares/middlewares');
+const {registerUser,emailVerfiy,loginUser,logoutUser} = require('../controllers/authentication/local_authentication');
+const {googleOAuth2,googleOAuth2Callback,linkedinOAuth2,linkedinOAuth2Callback} = require('../controllers/authentication/oauth2');
+const {registerUserLimiter,loginUserLimiter} = require('../middlewares/authentication');
 
 router.post('/api/auth/register',registerUserLimiter, registerUser);
 router.get('/api/auth/email-verify/:token', emailVerfiy);

@@ -16,10 +16,15 @@ const genrateUserAvatar = (username) => {
   return `https://robohash.org/${encodeURIComponent(username)}?set=set1&size=80x80`;
 }
 
+const genrateTeamAvatar = (name) => {
+  return `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${encodeURIComponent(name)}`;
+}
+
 
 
 
 module.exports = {
   passwordValidators,
-  genrateUserAvatar
+  genrateUserAvatar,
+  genrateTeamAvatar
 } 

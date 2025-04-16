@@ -1,0 +1,108 @@
+const {rateLimit} = require("express-rate-limit")
+const {Teams} = require("../models/teams")
+const redisClient = require("../redis")
+
+//rateLimit
+const createTeamRateLimit = rateLimit({
+    windowMs: 1 * 60 * 60 * 1000,
+    limit: 5,
+    legacyHeaders: false,
+    standardHeaders: true,
+    message: {
+        "status": "fail",
+        "code": 429,
+        "type": "rate limit error",
+        "resource" : "teams",
+        "message": "too many requests, please try again after 1 hour"
+    }
+})
+//rateLimit
+
+
+const isTeamExists = async (req,res,next) => {
+    console.log("isTeamExists Middleware")
+    try {
+        const team_id = req.params.team_id
+        const team = await Teams.findOne({id: team_id})
+        if(!team){
+            return res.status(404).json({
+                "status": "fail",
+                "code": 404,
+                "resource" : "teams",
+                "type": "resource not found",
+                "message": "team not found"
+            })
+        }
+        req.team = team
+        next()
+    } catch (error) {  
+        console.error(error)
+        next(error)
+    }
+}
+
+
+function checkMembership(passCheck) {
+    return async (req,res,next) => {
+        try {
+            const team = req.team
+            if(passCheck === team.type){
+                console.log("pass checkMembership Middleware")
+                return next()
+            }
+            console.log("checkMembership Middleware")
+    
+            const isMember = team.members.some((member) => member._id.toString() === req.user.id.toString())
+            if(!isMember){
+                return res.status(403).json({
+                    "status": "fail",
+                    "code": 403,
+                    "resource" : "teams",
+                    "type": "forbidden",
+                    "message": "you are not a member of this team"
+                })
+            }
+            next()
+        } catch (error) {
+            console.error(error)
+            next(error) 
+        }
+    }
+}
+
+
+function checkAuthorization(role) {
+    return async (req,res,next) => {
+        try {
+            console.log("checkAuthorization Middleware")
+
+            const team = req.team
+            const member = team.members.find((member) => member._id.toString() === req.user.id.toString())
+            if(role === "" || role.includes(member.role)){
+                return next()
+            }
+
+            return res.status(403).json({
+                "status": "fail",
+                "code": 403,
+                "resource" : "teams",
+                "type": "forbidden",
+                "message": "you are not authorized to do this action"
+            })
+
+        } catch (error) {
+            console.error(error)
+            next(error)  
+        }
+    }
+}
+
+
+module.exports = {
+    //rateLimit
+    createTeamRateLimit,
+    //rateLimit
+    isTeamExists,
+    checkMembership,
+    checkAuthorization
+}

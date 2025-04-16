@@ -98,7 +98,7 @@ const emailVerificationSchema = new mongoose.Schema({
     }
 })
 
-const Users = mongoose.model('User', userSchema , 'users');
+const Users = mongoose.model('Users', userSchema , 'users');
 const emailVerificationModel = mongoose.model('emailVerificationModel', emailVerificationSchema , 'emailVerificationModel');
 
 

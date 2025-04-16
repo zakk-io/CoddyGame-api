@@ -1,41 +1,60 @@
 @linkedin_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZjNmYTQwNmRkOWJmNDJlNWZmYjU5YyIsImVtYWlsIjoibW96YWtrLmlvQGdtYWlsLmNvbSIsInVzZXJuYW1lIjoibW96YWtrLmlvIiwiZmlyc3RfbmFtZSI6Ik1vaGFtbWVkIiwibGFzdF9uYW1lIjoiWmFrYXJpYSIsImF2YXRhciI6Imh0dHBzOi8vbWVkaWEubGljZG4uY29tL2Rtcy9pbWFnZS92Mi9ENEUwM0FRRXNjR3hvUmJnT0F3L3Byb2ZpbGUtZGlzcGxheXBob3RvLXNocmlua184MDBfODAwL0I0RVpQb3NHajZIc0FjLS8wLzE3MzQ3NzU2OTU5MTA_ZT0xNzQ5Njg2NDAwJnY9YmV0YSZ0PXNLX3FMZFJBQVdJdXVQckpxSi1TOEtqT1lyY3V6Q3FJQU1LTmt2b1N1UVUiLCJpYXQiOjE3NDQzOTAwODMsImV4cCI6MTc0NDk5NDg4M30.tYuHe959OLaKLfkopB3XLKDLfH4emqfjKPzScdbU-KM
 @google_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZjNmYTk4NmRkOWJmNDJlNWZmYjVhMiIsImVtYWlsIjoidWcyNDI0Nzg3QGluZXMuYWMucnciLCJ1c2VybmFtZSI6InVnMjQyNDc4NyIsImZpcnN0X25hbWUiOiJNT0hBTUVEIEFITUVEIiwibGFzdF9uYW1lIjoiTW9tYWhlZCBaYWthcmlhIiwiYXZhdGFyIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSmtDanZtMkh5QTdkX1VfRjhrTG0zT0JFREN2OE9ERy1KcnZCb3JxR2lJWFBCZmxRPXM5Ni1jIiwiaWF0IjoxNzQ0NDc1MzIyLCJleHAiOjE3NDUwODAxMjJ9.zhBLOZgc1UlNInDUxT2AoOKPbEBu_ABJDarHz0IWBb8
-###register 
-POST http://127.0.0.1:3000/api/auth/register
+
+@public_linkedin_team_id = 937cf970-c983-4e65-89c7-6e643a88f5ff
+
+@linkedin_team_id = 9a604ae6-9c6a-47bd-87c7-0cb3788bd438
+
+@google_team_id = 51e36857-86c7-4770-887f-e53de8994f84
+
+@public_google_team_id = 01eea8d3-1009-4c33-a440-afbe504b00c3
+
+
+
+
+
+### create a team
+POST http://127.0.0.1:3000/api/teams
 Content-Type: application/json
+Authorization: Bearer {{linkedin_token}}
 
 {
-    "username": "zakk",
-    "email" : "mozakk.io@gmail.com",
-    "password": "testpassU24ord",
-    "first_name": "Test",
-    "last_name": "User"
+    "name" : "team",
+    "type" : "public",
+    "description" : "description"
 }
 
 
-###email verify
-GET http://127.0.0.1:3000/api/auth/email-verify/d3fa109c-8ea5-44ab-9d8c-74dd4f574459
+### get team by id
+GET http://127.0.0.1:3000/api/teams/{{test_team_id}}
+Authorization: Bearer {{linkedin_token}}
 
 
-### login user
-POST http://127.0.0.1:3000/api/auth/login
-Content-Type: application/json
 
-{
-    "email" : "mozakk.io@gmail.com",
-    "password": "testpassU24ord"
-}
+### list public teams
+GET http://127.0.0.1:3000/api/teams/public
+Authorization: Bearer {{linkedin_token}}
 
-### auth token info
-GET http://127.0.0.1:3000/api/auth/me
+
+
+### list user teams
+GET http://127.0.0.1:3000/api/teams
 Authorization: Bearer {{google_token}}
 
-### logout user
-GET http://127.0.0.1:3000/api/auth/logout
+
+### update teams
+PUT http://127.0.0.1:3000/api/teams/{{test_team_id}}
+Authorization: Bearer {{linkedin_token}}
+Content-Type: application/json
+
+{
+    "name": "team",
+    "description": "description",
+    "type": "public"   
+}
 
 
 
-
-### welcome
-GET http://127.0.0.1:3000/welcome
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1vemFray5pb0BnbWFpbC5jb20iLCJ1c2VybmFtZSI6Im1vemFray5pbyIsImZpcnN0X25hbWUiOiJtby4iLCJsYXN0X25hbWUiOiJ6YWtrIiwiYXZhdGFyIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSzNQaWFtNHB0ejBjT0t0dmlvRERnM2RVMVd2Vmc2MjdYcXBLN0JDbGxXaG1mRVpBPXM5Ni1jIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImlhdCI6MTc0Mzk2OTg4MCwiZXhwIjoxNzQ0NTc0NjgwfQ.zHkZz8uVhxdpNetwkQ0BTb5ryFMjnKlvWt8LkhFvzUg
+### delete teams
+DELETE http://127.0.0.1:3000/api/teams/{{test_team_id}}
+Authorization: Bearer {{linkedin_token}}
