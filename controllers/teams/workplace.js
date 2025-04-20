@@ -2,7 +2,7 @@ const {Teams} = require("../../models/teams")
 const {genrateTeamAvatar} = require("../../utilities")
 const uuid = require("uuid")
 require("dotenv").config()
-const redisClient = require("../../redis")
+
 
 
 const createTeam = async (req,res,next) => {
@@ -17,6 +17,7 @@ const createTeam = async (req,res,next) => {
         creator : req.user.id,
         members : [{
             _id : req.user.id,
+            email : req.user.email,
             role : "leader"
         }],
     })

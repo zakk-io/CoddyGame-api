@@ -1,0 +1,37 @@
+@linkedin_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZjNmYTQwNmRkOWJmNDJlNWZmYjU5YyIsImVtYWlsIjoibW96YWtrLmlvQGdtYWlsLmNvbSIsInVzZXJuYW1lIjoibW96YWtrLmlvIiwiZmlyc3RfbmFtZSI6Ik1vaGFtbWVkIiwibGFzdF9uYW1lIjoiWmFrYXJpYSIsImF2YXRhciI6Imh0dHBzOi8vbWVkaWEubGljZG4uY29tL2Rtcy9pbWFnZS92Mi9ENEUwM0FRRXNjR3hvUmJnT0F3L3Byb2ZpbGUtZGlzcGxheXBob3RvLXNocmlua184MDBfODAwL0I0RVpQb3NHajZIc0FjLS8wLzE3MzQ3NzU2OTU5MTA_ZT0xNzUwMjkxMjAwJnY9YmV0YSZ0PWd6Ri05LUZOQ2g3UmlacTFTMGtVcklMVm51TUg4NFFSQWpMRkJyTzdzT1UiLCJpYXQiOjE3NDUwNTE4MzMsImV4cCI6MTc0NTY1NjYzM30.1WBX-ConbyhKCs3n-iHPqRrTMbIAhWUlA8kIIcYshw8
+@google_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZjNmYTk4NmRkOWJmNDJlNWZmYjVhMiIsImVtYWlsIjoidWcyNDI0Nzg3QGluZXMuYWMucnciLCJ1c2VybmFtZSI6InVnMjQyNDc4NyIsImZpcnN0X25hbWUiOiJNT0hBTUVEIEFITUVEIiwibGFzdF9uYW1lIjoiTW9tYWhlZCBaYWthcmlhIiwiYXZhdGFyIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSmtDanZtMkh5QTdkX1VfRjhrTG0zT0JFREN2OE9ERy1KcnZCb3JxR2lJWFBCZmxRPXM5Ni1jIiwiaWF0IjoxNzQ1MTY4NzAzLCJleHAiOjE3NDU3NzM1MDN9.Shsu-W440wuXzHUo2gpNlUU6ecuJeKPgBj_Km0oqeEc
+
+@linkedin_team_id = 955c7caa-fc27-48dd-b8aa-4c33b258f311
+
+@google_team_id = a0f6adf1-7e32-47c1-95f1-b8480f94cf49
+
+
+
+
+### invite user
+POST http://127.0.0.1:3000/api/teams/{{google_team_id}}/members/invitations
+Content-Type: application/json
+Authorization: Bearer {{google_token}}
+
+{
+    "email" : "test@gmail.com",
+    "role" : "co-leader"
+}
+
+
+### accept invitation
+GET http://127.0.0.1:3000/api/teams/955c7caa-fc27-48dd-b8aa-4c33b258f311/members/accept-invitation?token=a2c49c16-a25c-4e84-bf1b-9113d05188fb
+Authorization: Bearer {{google_token}}
+
+
+
+### list team invitations
+GET http://127.0.0.1:3000/api/teams/{{linkedin_team_id}}/members/invitations?used=true
+Authorization: Bearer {{google_token}}
+
+
+
+@invitations_id = 680530ecf952192c3e3f7401
+### cancel invitation
+DELETE  http://127.0.0.1:3000/api/teams/{{google_team_id}}/members/invitations/{{invitations_id}}
+Authorization: Bearer {{google_token}}

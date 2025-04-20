@@ -1,10 +1,10 @@
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
-const redisClient = require("./redis")
+
 require("dotenv").config()
 const path = require('path');
-const {jsonValidtion,validationError,valueDublictionsError} = require("./middlewares/errorshandlers")
+const {jsonValidtion,validationError,valueDublictionsError,CastError} = require("./middlewares/errorshandlers")
 const {authMiddleware} = require("./middlewares/authentication")
 const authenticationRoutes = require("./routes/authentication")
 const teamsRoutes = require("./routes/teams")
@@ -47,3 +47,5 @@ app.listen(3000, () => {
 app.use(jsonValidtion)
 app.use(validationError)
 app.use(valueDublictionsError)
+app.use(CastError)
+

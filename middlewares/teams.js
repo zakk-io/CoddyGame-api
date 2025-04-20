@@ -1,6 +1,6 @@
 const {rateLimit} = require("express-rate-limit")
 const {Teams} = require("../models/teams")
-const redisClient = require("../redis")
+
 
 //rateLimit
 const createTeamRateLimit = rateLimit({
@@ -14,6 +14,22 @@ const createTeamRateLimit = rateLimit({
         "type": "rate limit error",
         "resource" : "teams",
         "message": "too many requests, please try again after 1 hour"
+    }
+})
+
+
+
+const inviteUserRateLimit = rateLimit({
+    windowMs: 1 * 60 * 1000,
+    limit: 5,
+    legacyHeaders: false,
+    standardHeaders: true,
+    message: {
+        "status": "fail",
+        "code": 429,
+        "type": "rate limit error",
+        "resource" : "teams",
+        "message": "Too many invitations, please try again later."
     }
 })
 //rateLimit
@@ -98,11 +114,48 @@ function checkAuthorization(role) {
 }
 
 
+
+function isEmailInTeam() {
+    return async (req,res,next) => {
+        try {
+            console.log("isEmailInTeam Middleware")
+
+            const team = req.team
+            const email = req.body.email
+            if(!email){
+                return res.status(400).json({
+                    "status": "fail",
+                    "code": 400,
+                    "resource" : "teams",
+                    "type": "bad request",
+                    "message": "email is required"
+                })
+            }
+
+            const member = team.members.find((member) => member.email === email)
+            if(member){
+                req.isEmailInTeam = true
+                req.emailMember = member
+                return next()
+            }
+
+            req.isEmailInTeam = false
+            return next()
+            
+        } catch (error) {
+            console.error(error)
+            next(error)  
+        }
+    }
+}
+
 module.exports = {
     //rateLimit
     createTeamRateLimit,
+    inviteUserRateLimit,
     //rateLimit
     isTeamExists,
     checkMembership,
-    checkAuthorization
+    checkAuthorization,
+    isEmailInTeam
 }

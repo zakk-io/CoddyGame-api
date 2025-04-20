@@ -111,10 +111,9 @@ const googleOAuth2Callback = async (req,res,next) => {
             maxAge: 7 * 24 * 60 * 60 * 1000 
         })
 
-        return res.status(201).json({
+        return res.status(200).json({
             "status": "success",
-            "code" : "201",
-            "message": "User created successfully",
+            "code" : "200",
             "authToken": authToken,
         })
 
@@ -229,10 +228,9 @@ const linkedinOAuth2Callback = async (req,res,next) => {
             maxAge: 7 * 24 * 60 * 60 * 1000 
         })
 
-        return res.status(201).json({
+        return res.status(200).json({
             "status": "success",
-            "code" : "201",
-            "message": "User created successfully",
+            "code" : "200",
             "authToken": authToken,
         })
 

@@ -42,8 +42,22 @@ const valueDublictionsError = (err,req,res,next) => {
 }
 
 
+const CastError = (err,req,res,next) => {
+    if (err.name === 'CastError' && err.kind === 'ObjectId') {
+        return res.status(400).json({
+          "status": "fail",
+          "code" : "400",
+          "type" : "CastError",
+          "message": `Invalid ${err.path}: ${err.value}`
+        });
+    }
+    next(err);
+}
+
+
 module.exports = {
     jsonValidtion,
     validationError,
-    valueDublictionsError
+    valueDublictionsError,
+    CastError
 }
