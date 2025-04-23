@@ -35,3 +35,31 @@ Authorization: Bearer {{google_token}}
 ### cancel invitation
 DELETE  http://127.0.0.1:3000/api/teams/{{google_team_id}}/members/invitations/{{invitations_id}}
 Authorization: Bearer {{google_token}}
+
+
+### list team members
+GET http://127.0.0.1:3000/api/teams/{{linkedin_team_id}}/members
+Authorization: Bearer {{linkedin_token}}
+
+
+@member_id = 67f3fa406dd9bf42e5ffb59c
+### list team members
+PUT http://127.0.0.1:3000/api/teams/{{linkedin_team_id}}/members/{{member_id}}
+Authorization: Bearer {{linkedin_token}}
+Content-Type: application/json
+
+{
+    "role" : "co-leader"
+}
+
+
+
+### leave team
+GET http://127.0.0.1:3000/api/teams/{{linkedin_team_id}}/leave
+Authorization: Bearer {{google_token}}
+
+
+
+### kick team member
+GET http://127.0.0.1:3000/api/teams/{{linkedin_team_id}}/members/67f3fa986dd9bf42e5ffb5a2/kick
+Authorization: Bearer {{linkedin_token}}

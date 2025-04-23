@@ -29,7 +29,7 @@ const createTeam = async (req,res,next) => {
         "message": "team created successfully",
         "self" : `${process.env.BASE_URI}/api/teams/${team.id}`,
         "resource" : "teams",
-        "data": {
+        "team": {
             "id": team.id,
             "name": team.name,
             "type": team.type,
@@ -52,7 +52,7 @@ const getTeam = async (req,res,next) => {
             "status": "success",
             "code" : "200",
             "resource" : "teams",
-            "data": {
+            "team": {
                 "id": team.id,
                 "name": team.name,
                 "type": team.type,
@@ -160,7 +160,7 @@ const updateTeam = async (req,res,next) => {
             "message": "team updated successfully",
             "self" : `${process.env.BASE_URI}/api/teams/${team.id}`,
             "resource" : "teams",
-            "data": {
+            "team": {
                 "id": team.id,
                 "name": team.name,
                 "type": team.type,
@@ -194,13 +194,38 @@ const deleteTeam = async (req,res,next) => {
     }
 }
 
+
+
+const leaveTeam = async (req,res,next) => {
+    try {
+        const team_id = req.params.team_id
+
+        const team = await Teams.findOne({id : team_id})
+        team.members.remove(req.user.id)
+        await team.save()
+
+        return res.status(200).json({
+            "status": "success",
+            "code" : "200",
+            "message": "you have left the team successfully",
+            "resource" : "members",
+            "nextUri" : `${process.env.BASE_URI}/api/teams`
+        })
+
+    } catch (error) {
+        console.log(error)
+        next(error)  
+    }
+}
+
 module.exports = {
     createTeam,
     getTeam,
     listPublicTeams,
     listUserTeams,
     updateTeam,
-    deleteTeam
+    deleteTeam,
+    leaveTeam
 }
 
 

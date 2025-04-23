@@ -149,6 +149,46 @@ function isEmailInTeam() {
     }
 }
 
+
+
+function isUserIdInTeam() {
+    return async (req,res,next) => {
+        try {
+            console.log("isUserIdInTeam Middleware")
+
+            const team = req.team
+            const member_id = req.params.member_id
+            
+            if(!member_id){
+                return res.status(400).json({
+                    "status": "fail",
+                    "code": 400,
+                    "resource" : "teams",
+                    "type": "bad request",
+                    "message": "member_id is required"
+                })
+            }
+
+            const member = team.members.find((member) => member._id.toString() === member_id.toString())
+            if(member){
+                req.isUserIdInTeam = true
+                req.idMember = member
+                return next()
+            }
+
+            req.isUserIdInTeam = false
+            return next()
+            
+        } catch (error) {
+            console.error(error)
+            next(error)  
+        }
+    }
+}
+
+
+
+
 module.exports = {
     //rateLimit
     createTeamRateLimit,
@@ -157,5 +197,6 @@ module.exports = {
     isTeamExists,
     checkMembership,
     checkAuthorization,
-    isEmailInTeam
+    isEmailInTeam,
+    isUserIdInTeam
 }

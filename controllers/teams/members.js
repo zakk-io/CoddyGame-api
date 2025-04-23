@@ -1,5 +1,4 @@
 const {Teams,Invitations} = require("../../models/teams")
-const {Users} = require("../../models/users")
 const uuid = require("uuid")
 const nodemailer = require("nodemailer")
 require("dotenv").config
@@ -57,7 +56,7 @@ const inviteUser = async (req,res,next) => {
             "code" : "201",
             "message": "invitation has been sent successfully",
             "resource" : "invitations",
-            "data": {
+            "invitation": {
                 "email": invitation.email,
                 "role": invitation.role
             },
@@ -161,7 +160,7 @@ const listInvitations = async (req,res,next) => {
             "code" : "200",
             "message": "invitations fetched successfully",
             "resource" : "invitations",
-            "data": {
+            "invitations": {
                 invitations
             }
         })
@@ -182,7 +181,7 @@ const cancelInvitation = async (req,res,next) => {
             team_id,
             used : false
         })
-        
+
         if(!invitation){
             return res.status(404).json({
                 "status": "fail",
@@ -212,9 +211,151 @@ const cancelInvitation = async (req,res,next) => {
     }
 }
 
+
+const listTeamMembers = async (req,res,next) => {
+    try {
+        const team_id = req.params.team_id
+
+        const team = await Teams.findOne({id : team_id}).select("members")
+        .populate("members._id", "username first_name last_name avatar")
+
+        return res.status(200).json({
+            "status": "success",
+            "code" : "200",
+            "message": "members fetched successfully",
+            "resource" : "members",
+            "count" : team.members.length,
+            "members" : team.members.map((member) => {
+                return {
+                    _id : member._id._id,
+                    email : member.email,
+                    role : member.role,
+                    username : member._id.username,
+                    first_name : member._id.first_name,
+                    last_name : member._id.last_name,
+                    avatar : member._id.avatar
+                }
+            })
+
+        })
+    } catch (error) {
+        console.log(error)
+        next(error)
+        
+    }
+}
+
+
+const changeMemberRole = async (req,res,next) => {
+    try {
+
+        const allowedRoles = ["co-leader","editor","viewer"]
+        const role = req.body.role
+
+        if(!allowedRoles.includes(role)){
+            return res.status(400).json({
+                "status": "fail",
+                "code" : "400",
+                "message": "invalid parameter",
+                "parameters" : {
+                    "role" : role
+                },
+                "fix" : `allowed roles are ${allowedRoles}`,
+                "resource" : "members",
+            })  
+        }
+
+        const member_id = req.params.member_id
+        const team_id = req.params.team_id
+
+        const team = await Teams.findOneAndUpdate({
+            id : team_id,
+            "members._id" : member_id,
+            "members.role" :{ $in: allowedRoles },
+        },{$set : {"members.$.role" : role}},
+        { new: true})
+
+        if(!team){
+            return res.status(404).json({
+                "status": "fail",
+                "code" : "404",
+                "message": "member is not found in the team",
+                "resource" : "members",
+            })
+        }
+
+        const member = team.members.find(member => member._id.toString() === member_id);
+
+        return res.json({
+            "status": "success",
+            "code" : "200",
+            "message": "member role updated",
+            "resource" : "members",
+            "member": {
+                "email": member.email,
+                "role": member.role
+            },
+            "nextUri" : `${process.env.BASE_URI}/api/teams/${team_id}/members/`
+        })
+    } catch (error) {
+        console.log(error)
+        next(error) 
+    }
+}
+
+
+
+const kickMember = async (req,res,next) => {
+    try {
+        if(!req.isUserIdInTeam){
+            return res.status(404).json({
+                "status": "fail",
+                "code" : "404",
+                "message": "member not found in the team",
+                "resource" : "members",
+                "nextUri" : `${process.env.BASE_URI}/api/teams/${req.params.team_id}/members`
+            })
+        }
+
+        const member_id = req.params.member_id
+        const team = await Teams.findOne({id : req.params.team_id})
+
+        if(team.creator.toString() === member_id.toString()){
+            return res.status(403).json({
+                "status": "fail",
+                "code" : "403",
+                "message": "you cannot kick the team leader",
+                "resource" : "members",
+                "nextUri" : `${process.env.BASE_URI}/api/teams/${req.params.team_id}/members`
+
+            })
+        }
+
+        team.members.remove(member_id)
+        await team.save()
+
+        return res.status(200).json({
+            "status": "success",
+            "code" : "200",
+            "message": "member has been kicked successfully",
+            "resource" : "members",
+            "nextUri" : `${process.env.BASE_URI}/api/teams/${req.params.team_id}/members`
+        })
+
+    } catch (error) {
+        console.log(error)
+        next(error)  
+        
+    }
+}
+
 module.exports = {
     inviteUser,
     acceptInvitation,
     listInvitations,
-    cancelInvitation
+    cancelInvitation,
+    listTeamMembers,
+    changeMemberRole,
+    leaveTeam,
+    kickMember
 }
