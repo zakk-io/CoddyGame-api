@@ -51,7 +51,7 @@ const changeUsername = async (req, res , next) => {
 
 const listMyTeamsInvitations = async (req,res,next) => {
     try {
-        const invitations = await Invitations.find({email:req.user.email,used:false})
+        const invitations = await Invitations.find({email:req.user.email,status:"pending"})
         .populate("team_id", "name avatar type description createdAt")
 
 
@@ -87,7 +87,9 @@ const rejectInvitation = async (req,res,next) => {
                 "message": "Invitation ID is required"
             })
         }
-        const invitation = await Invitations.findOne({_id:invitation_id,email:req.user.email})
+        const invitation = await Invitations.findOneAndUpdate({_id:invitation_id,email:req.user.email,status:"pending"},
+            {$set : {status : "rejected"}},{new : true}
+        )
         if(!invitation){
             return res.status(404).json({
                 "status":"fail",
@@ -97,7 +99,6 @@ const rejectInvitation = async (req,res,next) => {
             })
         }
 
-        await Invitations.deleteOne({_id:invitation_id,email:req.user.email})
         return res.json({
             "status":"success",
             "code":200,

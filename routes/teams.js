@@ -29,7 +29,7 @@ router.get('/api/teams/:team_id/leave',isTeamExists,checkMembership(""),checkAut
 router.post('/api/teams/:team_id/members/invitations',[isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"]),isEmailInTeam(),inviteUserRateLimit],inviteUser);
 router.get('/api/teams/:team_id/members/accept-invitation',isTeamExists,acceptInvitation);
 router.get('/api/teams/:team_id/members/invitations',isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"]),listInvitations);
-router.delete('/api/teams/:team_id/members/invitations/:invitation_id',isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"]),cancelInvitation);
+router.get('/api/teams/:team_id/members/invitations/:invitation_id',isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"]),cancelInvitation);
 //members mangment
 router.get('/api/teams/:team_id/members',isTeamExists,checkMembership(""),checkAuthorization(""),listTeamMembers);
 router.put('/api/teams/:team_id/members/:member_id',isTeamExists,checkMembership(""),checkAuthorization(["leader"]),changeMemberRole);

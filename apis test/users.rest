@@ -57,8 +57,8 @@ GET http://127.0.0.1:3000/api/auth/account/invitations
 Authorization: Bearer {{linkedin_token}}
 
 
-@invitations_id = 680a58df9e0d90ee23300166
+@invitations_id = 680a784ca68030fad85dbc98
 ### reject Invitation
-DELETE  http://127.0.0.1:3000/api/auth/account/invitations/{{invitations_id}}
+GET  http://127.0.0.1:3000/api/auth/account/invitations/{{invitations_id}}
 Authorization: Bearer {{linkedin_token}}
 

@@ -27,7 +27,7 @@ router.use(authMiddleware)
 router.get('/api/auth/account/me', Me);
 router.put('/api/auth/account/username', changeUsername);
 router.get('/api/auth/account/invitations', listMyTeamsInvitations);
-router.delete('/api/auth/account/invitations/:invitation_id', rejectInvitation);
+router.get('/api/auth/account/invitations/:invitation_id', rejectInvitation);
 
 
 

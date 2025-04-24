@@ -103,9 +103,10 @@ const InvitationSchema = new mongoose.Schema({
         required : true,
     },
 
-    used : {
-        type : Boolean,
-        default : false,
+    status : {
+        type : String,
+        enum : ["pending","accepted","rejected","cancelled"],
+        default : "pending",
     }
 })
 

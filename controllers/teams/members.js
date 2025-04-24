@@ -79,10 +79,10 @@ const acceptInvitation = async (req,res,next) => {
         const invitation = await Invitations.findOneAndUpdate({
             token,
             team_id : req.team._id,
-            used : false,
+            status : "pending",
             expiresAt : {$gt : new Date(Date.now())}
         },
-        {$set : {used : true}},
+        {$set : {status : "accepted"}},
         {new : true})
 
         if(!invitation){
@@ -107,7 +107,7 @@ const acceptInvitation = async (req,res,next) => {
             }
           );
 
-        await Invitations.deleteMany({used : false , team_id : req.team._id , email : invitation.email})  
+        await Invitations.deleteMany({status : "pending" , team_id : req.team._id , email : invitation.email})  
 
         return res.status(200).json({
             "status": "success",
@@ -126,25 +126,26 @@ const acceptInvitation = async (req,res,next) => {
 
 const listInvitations = async (req,res,next) => {
     try {
-        const used = req.query.used || "false"
+        const allowedStatus = ["pending","accepted","rejected","cancelled"]
+        const status = req.query.status || "all"
 
-        if(used !== "true" && used !== "false"){
+        if(!allowedStatus.includes(status) && status !== "all"){
             return res.status(400).json({
                 "status": "fail",
                 "code" : "400",
                 "message": "invalid query parameter",
                 "parameters" : {
-                    "used" : used
+                    "status" : status
                 },
-                "fix" : "used parameter should be either true or false",
+                "fix" : `status parameter can be either ${allowedStatus}`,
                 "resource" : "invitations",
             })
         }
 
         const invitations = await Invitations.find({
             team_id : req.team._id,
-            used : used
-        }).select("email used role expiresAt")
+            status : status === "all" ? { $in: allowedStatus } : status,
+        }).select("email status role expiresAt")
 
         if(invitations.length === 0){
             return res.status(404).json({
@@ -176,11 +177,11 @@ const cancelInvitation = async (req,res,next) => {
         const invitation_id = req.params.invitation_id
         const team_id = req.params.team_id
 
-        const invitation = await Invitations.findOne({
+        const invitation = await Invitations.findOneAndUpdate({
             _id : invitation_id,
             team_id : req.team._id,
-            used : false
-        })
+            status : "pending"
+        }, {$set : {status : "cancelled"}}, {new : true})
 
         if(!invitation){
             return res.status(404).json({
@@ -191,12 +192,6 @@ const cancelInvitation = async (req,res,next) => {
             })
         }
 
-        await Invitations.deleteOne({
-            _id : invitation_id,
-            team_id : req.team._id,
-            used : false
-        })
-        
         return res.status(200).json({
             "status": "success",
             "code" : "200",
