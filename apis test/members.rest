@@ -14,24 +14,24 @@ Content-Type: application/json
 Authorization: Bearer {{google_token}}
 
 {
-    "email" : "test@gmail.com",
+    "email" : "mozakk.io@gmail.com",
     "role" : "co-leader"
 }
 
 
 ### accept invitation
-GET http://127.0.0.1:3000/api/teams/955c7caa-fc27-48dd-b8aa-4c33b258f311/members/accept-invitation?token=a2c49c16-a25c-4e84-bf1b-9113d05188fb
+GET http://127.0.0.1:3000/api/teams/68037e1d65205a28c106e45f/members/accept-invitation?token=86bf3567-0e90-4e42-bbc4-aebe7a915239
 Authorization: Bearer {{google_token}}
 
 
 
 ### list team invitations
-GET http://127.0.0.1:3000/api/teams/{{linkedin_team_id}}/members/invitations?used=true
+GET http://127.0.0.1:3000/api/teams/{{google_team_id}}/members/invitations?used=true
 Authorization: Bearer {{google_token}}
 
 
 
-@invitations_id = 680530ecf952192c3e3f7401
+@invitations_id = 680a57c05238ef9c56ef414e
 ### cancel invitation
 DELETE  http://127.0.0.1:3000/api/teams/{{google_team_id}}/members/invitations/{{invitations_id}}
 Authorization: Bearer {{google_token}}
@@ -43,7 +43,7 @@ Authorization: Bearer {{linkedin_token}}
 
 
 @member_id = 67f3fa406dd9bf42e5ffb59c
-### list team members
+### change member role
 PUT http://127.0.0.1:3000/api/teams/{{linkedin_team_id}}/members/{{member_id}}
 Authorization: Bearer {{linkedin_token}}
 Content-Type: application/json

@@ -39,7 +39,7 @@ const isTeamExists = async (req,res,next) => {
     console.log("isTeamExists Middleware")
     try {
         const team_id = req.params.team_id
-        const team = await Teams.findOne({id: team_id})
+        const team = await Teams.findOne({id: team_id}) || await Teams.findOne({ _id: team_id}) 
         if(!team){
             return res.status(404).json({
                 "status": "fail",

@@ -18,6 +18,7 @@ const inviteUser = async (req,res,next) => {
     try {
         const {email,role} = req.body
         const team_id = req.params.team_id
+
         const token = uuid.v4()
         if(req.isEmailInTeam){
             return res.status(400).json({
@@ -31,7 +32,7 @@ const inviteUser = async (req,res,next) => {
         const invitation = await new Invitations({
             email,
             role,
-            team_id,
+            team_id : req.team._id,
             token : token,
             expiresAt : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         }).save()
@@ -44,7 +45,7 @@ const inviteUser = async (req,res,next) => {
             html: `
                 <h1>Join ${req.team.name} as a ${role} at CoddyGame 🚀</h1>
                 <p>You have been invited to join the team ${req.team.name}. Click below to accept your invitation:</p>
-                <a href="${process.env.BASE_URI}/api/teams/${team_id}/members/accept-invitation?token=${token}">
+                <a href="${process.env.BASE_URI}/api/teams/${req.team._id}/members/accept-invitation?token=${token}">
                   invitation link 
                 </a>
             `,
@@ -77,7 +78,7 @@ const acceptInvitation = async (req,res,next) => {
 
         const invitation = await Invitations.findOneAndUpdate({
             token,
-            team_id,
+            team_id : req.team._id,
             used : false,
             expiresAt : {$gt : new Date(Date.now())}
         },
@@ -94,7 +95,7 @@ const acceptInvitation = async (req,res,next) => {
         }
 
         await Teams.findOneAndUpdate(
-            { id: team_id },
+            { _id: team_id },
             {
               $addToSet: {
                 members: {
@@ -106,7 +107,7 @@ const acceptInvitation = async (req,res,next) => {
             }
           );
 
-        await Invitations.deleteMany({used : false , team_id , email : invitation.email})  
+        await Invitations.deleteMany({used : false , team_id : req.team._id , email : invitation.email})  
 
         return res.status(200).json({
             "status": "success",
@@ -125,7 +126,6 @@ const acceptInvitation = async (req,res,next) => {
 
 const listInvitations = async (req,res,next) => {
     try {
-        const team_id = req.params.team_id
         const used = req.query.used || "false"
 
         if(used !== "true" && used !== "false"){
@@ -142,7 +142,7 @@ const listInvitations = async (req,res,next) => {
         }
 
         const invitations = await Invitations.find({
-            team_id,
+            team_id : req.team._id,
             used : used
         }).select("email used role expiresAt")
 
@@ -178,7 +178,7 @@ const cancelInvitation = async (req,res,next) => {
 
         const invitation = await Invitations.findOne({
             _id : invitation_id,
-            team_id,
+            team_id : req.team._id,
             used : false
         })
 
@@ -193,7 +193,7 @@ const cancelInvitation = async (req,res,next) => {
 
         await Invitations.deleteOne({
             _id : invitation_id,
-            team_id,
+            team_id : req.team._id,
             used : false
         })
         
@@ -356,6 +356,5 @@ module.exports = {
     cancelInvitation,
     listTeamMembers,
     changeMemberRole,
-    leaveTeam,
     kickMember
 }

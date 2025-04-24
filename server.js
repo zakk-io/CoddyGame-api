@@ -6,7 +6,7 @@ require("dotenv").config()
 const path = require('path');
 const {jsonValidtion,validationError,valueDublictionsError,CastError} = require("./middlewares/errorshandlers")
 const {authMiddleware} = require("./middlewares/authentication")
-const authenticationRoutes = require("./routes/authentication")
+const authRoutes = require("./routes/auth")
 const teamsRoutes = require("./routes/teams")
 
 const cookieparser = require("cookie-parser")
@@ -21,7 +21,7 @@ app.get('/register', (req, res) => {
 app.use(express.json());
 app.use(cookieparser())
 app.use(express.static('public'));
-app.use(authenticationRoutes)
+app.use(authRoutes)
 app.use(teamsRoutes)
 
 
