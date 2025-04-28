@@ -1,4 +1,4 @@
-const {Teams,Invitations} = require("../../models/teams")
+const {Teams,Invitations,joinTeamRequestsModel} = require("../../models/teams")
 const uuid = require("uuid")
 const nodemailer = require("nodemailer")
 require("dotenv").config
@@ -13,7 +13,7 @@ var transporter = nodemailer.createTransport({
 });
 
 
-
+//invitations functionality
 const inviteUser = async (req,res,next) => {
     try {
         const {email,role} = req.body
@@ -75,6 +75,15 @@ const acceptInvitation = async (req,res,next) => {
     try {
         const token = req.query.token
         const team_id = req.params.team_id
+
+        if(req.amITeamMember){
+            return res.status(400).json({
+                "status": "fail",
+                "code" : "400",
+                "message": "you are already a member of this team",
+                "resource" : "teams",
+            })
+        }
 
         const invitation = await Invitations.findOneAndUpdate({
             token,
@@ -207,6 +216,7 @@ const cancelInvitation = async (req,res,next) => {
 }
 
 
+//members mangment
 const listTeamMembers = async (req,res,next) => {
     try {
         const team_id = req.params.team_id
@@ -299,7 +309,6 @@ const changeMemberRole = async (req,res,next) => {
 }
 
 
-
 const kickMember = async (req,res,next) => {
     try {
         if(!req.isUserIdInTeam){
@@ -325,6 +334,16 @@ const kickMember = async (req,res,next) => {
 
             })
         }
+  
+        await Invitations.deleteMany({
+            team_id : req.team._id,
+            email : req.idMember.email,
+        })
+
+        await joinTeamRequestsModel.deleteMany({
+            team_id : req.team._id,
+            user_id : member_id
+        })
 
         team.members.remove(member_id)
         await team.save()
@@ -344,6 +363,264 @@ const kickMember = async (req,res,next) => {
     }
 }
 
+
+//join team functionality
+const joinTeam = async (req,res,next) => {
+    try {
+        const team_id = req.params.team_id
+        const team = await Teams.findOne({
+            id : team_id,
+        }).populate("creator", "email")
+
+        if(team.type === "private"){
+            return res.status(400).json({
+                "status": "fail",
+                "code" : "400",
+                "message": "this team is private, you cannot join it",
+                "resource" : "teams",
+                "nextUri" : `${process.env.BASE_URI}/api/teams`
+            })
+        }
+
+        const user = req.user
+
+        if(req.amITeamMember){
+            return res.status(400).json({
+                "status": "fail",
+                "code" : "400",
+                "message": "you are already a member of this team",
+                "resource" : "teams",
+                "nextUri" : `${process.env.BASE_URI}/api/teams`
+            })
+        }
+
+        // Check for existing join request
+        const existingRequest = await joinTeamRequestsModel.findOne({
+            team_id: team._id,
+            user_id: user.id,
+            status: "pending"
+        });
+
+        if(existingRequest){
+            return res.status(400).json({
+                "status": "fail",
+                "code" : "400",
+                "message": "you have already sent a join request to this team",
+                "resource" : "teams",
+                "nextUri" : `${process.env.BASE_URI}/api/teams`
+            })
+        }
+
+        // Create new join request
+        await new joinTeamRequestsModel({
+            team_id: team._id,
+            user_id: user.id,
+            status: "pending"
+        }).save();
+
+        await transporter.sendMail({
+            from: '"CoddyGame 🚀" <coddygame1@gmail.com>',
+            to: team.creator.email,
+            subject: "New Team join request!",
+            html: `
+                <h1>${user.username} want to be part of your team ${team.name} at CoddyGame 🚀</h1>
+                <a href="${process.env.BASE_URI}/api/teams/${team._id}/join-requests">
+                  check join requests
+                </a>
+            `,
+        });
+
+        return res.status(201).json({
+            "status": "success",
+            "code" : "201",
+            "message": "join request has been sent successfully",
+            "resource" : "teams",
+        })
+    } catch (error) {
+        console.log(error)
+        next(error)
+    }
+}
+
+
+const listTeamJoinsRequests = async (req,res,next) => {
+    try {  
+        const allowedStatus = ["pending","accepted","rejected"]
+        const status = req.query.status || "all"
+
+        if(!allowedStatus.includes(status) && status !== "all"){
+            return res.status(400).json({
+                "status": "fail",
+                "code" : "400",
+                "message": "invalid query parameter",
+                "parameters" : {
+                    "status" : status
+                },
+                "fix" : `status parameter can be either ${allowedStatus}`,
+                "resource" : "invitations",
+            })
+        }
+
+        const joinTeamRequests = await joinTeamRequestsModel.find({
+        team_id : req.team._id,
+        status : status === "all" ? {$in: allowedStatus} : status,
+       }).populate("user_id","username first_name last_name avatar")
+        
+
+        if(joinTeamRequests.length === 0){
+            return res.status(404).json({
+                "status": "fail",
+                "code" : "404",
+                "message": "no join requests found",
+                "resource" : "teams",
+            })
+        }
+
+        return res.status(200).json({
+            "status": "success",
+            "code" : "200",
+            "message": "join requests fetched successfully",
+            "resource" : "teams",
+            "joinRequests" : joinTeamRequests.map((request) => {
+                return {
+                    id : request._id,
+                    user_id : request.user_id._id,
+                    username : request.user_id.username,
+                    first_name : request.user_id.first_name,
+                    last_name : request.user_id.last_name,
+                    avatar : request.user_id.avatar,
+                    status : request.status
+                }
+            })
+        })
+
+
+    } catch (error) {
+        console.log(error)
+        next(error)  
+    }
+}
+
+
+const acceptJoinRequest = async (req,res,next) => {
+    try {
+        const join_request_id = req.params.join_request_id
+
+        const role = req.body.role || "viewer"
+        const allowedRoles = ["co-leader","editor","viewer"]
+        if(!allowedRoles.includes(role)){
+            return res.status(400).json({
+                "status": "fail",
+                "code" : "400",
+                "message": "invalid parameter",
+                "parameters" : {
+                    "role" : role
+                },
+                "fix" : `allowed roles are ${allowedRoles}`,
+                "resource" : "teams",
+            })  
+        }
+
+        const joinTeamRequest = await joinTeamRequestsModel.findOne({
+            _id : join_request_id,
+            team_id : req.team._id,
+            status : "pending"
+        }).populate("user_id","email")
+
+
+        if(!joinTeamRequest){
+            return res.status(404).json({
+                "status": "fail",
+                "code" : "404",
+                "message": "join request not found",
+                "resource" : "teams",
+            })
+        }
+
+        //check if member is already in the team
+        const isMember = req.team.members.some((member) => member._id.toString() === joinTeamRequest.user_id._id.toString())  
+        if(isMember){
+            return res.status(400).json({
+                "status": "fail",
+                "code" : "400",
+                "message": "user is already a member of the team",
+                "resource" : "teams",
+            })
+        }
+        
+        await joinTeamRequestsModel.findOneAndUpdate({
+            _id : join_request_id,
+            team_id : req.team._id,
+            status : "pending"
+        } , {$set : {status : "accepted"}})
+
+
+        await Teams.findOneAndUpdate(
+            { _id: req.team._id },
+            {
+              $addToSet: {
+                members: {
+                  _id: joinTeamRequest.user_id,               
+                  email: joinTeamRequest.user_id.email,
+                  role: role
+                }
+              }
+            }
+          );
+
+          return res.status(200).json({
+            "status": "success",
+            "code" : "200",
+            "message": "user has been accepted in the team",
+            "data" : {
+                "user_id" : joinTeamRequest.user_id._id,
+                "role" : role,
+            },
+            "resource" : "teams",
+            "nextUri" : `${process.env.BASE_URI}/api/teams/${req.team._id}/members`
+        })
+
+    } catch (error) {
+        console.log(error)
+        next(error)
+    }
+}
+
+const rejectJoinRequest = async (req,res,next) => {
+    try {
+        const join_request_id = req.params.join_request_id
+
+        const joinTeamRequest = await joinTeamRequestsModel.findOneAndUpdate({
+            _id : join_request_id,
+            team_id : req.team._id,
+            status : "pending"
+        },{$set : {status : "rejected"}}, {new : true})
+
+        if(!joinTeamRequest){
+            return res.status(404).json({
+                "status": "fail",
+                "code" : "404",
+                "message": "join request not found",
+                "resource" : "teams",
+            })
+        }
+
+        return res.status(200).json({
+            "status": "success",
+            "code" : "200",
+            "message": "join request has been rejected",
+            "resource" : "teams",
+            "nextUri" : `${process.env.BASE_URI}/api/teams/${req.team._id}/join-requests`
+        })
+
+    } catch (error) {
+        console.log(error)
+        next(error)
+    }
+}
+
+
+
 module.exports = {
     inviteUser,
     acceptInvitation,
@@ -351,5 +628,9 @@ module.exports = {
     cancelInvitation,
     listTeamMembers,
     changeMemberRole,
-    kickMember
+    kickMember,
+    joinTeam,
+    listTeamJoinsRequests,
+    acceptJoinRequest,
+    rejectJoinRequest
 }

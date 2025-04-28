@@ -1,4 +1,4 @@
-const {Teams} = require("../../models/teams")
+const {Teams,Invitations,joinTeamRequestsModel} = require("../../models/teams")
 const {genrateTeamAvatar} = require("../../utilities")
 const uuid = require("uuid")
 require("dotenv").config()
@@ -199,8 +199,18 @@ const deleteTeam = async (req,res,next) => {
 const leaveTeam = async (req,res,next) => {
     try {
         const team_id = req.params.team_id
-
         const team = await Teams.findOne({id : team_id})
+
+        await Invitations.deleteMany({
+            team_id : req.team._id,
+            email : req.member.email,
+        })
+
+        await joinTeamRequestsModel.deleteMany({
+            team_id : req.team._id,
+            user_id : req.user.id
+        })
+
         team.members.remove(req.user.id)
         await team.save()
 
@@ -210,7 +220,7 @@ const leaveTeam = async (req,res,next) => {
             "message": "you have left the team successfully",
             "resource" : "members",
             "nextUri" : `${process.env.BASE_URI}/api/teams`
-        })
+        })  
 
     } catch (error) {
         console.log(error)

@@ -95,6 +95,7 @@ function checkAuthorization(role) {
             const team = req.team
             const member = team.members.find((member) => member._id.toString() === req.user.id.toString())
             if(role === "" || role.includes(member.role)){
+                req.member = member
                 return next()
             }
 
@@ -187,6 +188,31 @@ function isUserIdInTeam() {
 }
 
 
+function amITeamMember() {
+    return async (req,res,next) => {
+        try {
+            const team = req.team
+            console.log("amiTeamMember Middleware")
+    
+            const member = team.members.find((member) => member._id.toString() === req.user.id.toString())
+            if(member){
+                req.amITeamMember = true
+                req.memberInstance = member
+                return next()
+            }
+
+            req.amITeamMember = false
+            return next()
+        } catch (error) {
+            console.error(error)
+            next(error) 
+        }
+    }
+}
+
+
+
+
 
 
 module.exports = {
@@ -198,5 +224,6 @@ module.exports = {
     checkMembership,
     checkAuthorization,
     isEmailInTeam,
-    isUserIdInTeam
+    isUserIdInTeam,
+    amITeamMember,
 }

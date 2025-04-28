@@ -110,11 +110,33 @@ const InvitationSchema = new mongoose.Schema({
     }
 })
 
+
+const joinTeamRequestsSchema = new mongoose.Schema({
+    team_id : {
+        type : mongoose.Types.ObjectId,
+        ref: 'Teams',
+        required : true,
+    },
+
+    user_id : {
+        type : mongoose.Types.ObjectId,
+        ref: 'Users',
+        required : true,
+    },
+
+    status : {
+        type : String,
+        enum : ["pending","accepted","rejected"],
+        default : "pending",
+    }
+})
+
 const Teams = mongoose.model('Teams', TeamSchema , 'teams');
 const Invitations = mongoose.model('Invitations', InvitationSchema , 'invitations');
-
+const joinTeamRequestsModel = mongoose.model('joinTeamRequestsModel', joinTeamRequestsSchema , 'joinTeamRequestsModel');
 
 module.exports = {
     Teams,
     Invitations,
+    joinTeamRequestsModel,
 };
