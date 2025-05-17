@@ -131,12 +131,50 @@ const joinTeamRequestsSchema = new mongoose.Schema({
     }
 })
 
+
+
+const directJoinLinkSchema = new mongoose.Schema({
+    team_id : {
+        type : mongoose.Types.ObjectId,
+        ref: 'Teams',
+        required : true,
+    },
+
+    token : {
+        type : String,
+        required : true,
+        unique : true,
+    },
+
+    role : {
+        type : String,
+        enum : ["co-leader","editor","viewer"],
+        require : true
+    },
+
+    status : {
+        type : String,
+        enum : ["pending","accepted"],
+        default : "pending",
+    },
+
+    expiresAt : {
+        type : Date,
+        required : true,
+    }
+})
+
+
+
 const Teams = mongoose.model('Teams', TeamSchema , 'teams');
 const Invitations = mongoose.model('Invitations', InvitationSchema , 'invitations');
 const joinTeamRequestsModel = mongoose.model('joinTeamRequestsModel', joinTeamRequestsSchema , 'joinTeamRequestsModel');
+const directJoinLinkModel = mongoose.model('directJoinLinkModel', directJoinLinkSchema , 'directJoinLinkModel');
+
 
 module.exports = {
     Teams,
     Invitations,
     joinTeamRequestsModel,
+    directJoinLinkModel,
 };

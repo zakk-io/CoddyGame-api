@@ -38,8 +38,13 @@ const loginUserLimiter = rateLimit({
 const authMiddleware = (req,res,next) => {
     try {
         let token
-        if(req.headers.authorization && req.headers.authorization.startsWith("Bearer")){
-            token = req.headers.authorization.split(" ")[1]  
+        token = req.cookies.authToken
+
+        if(!token){
+            if(req.headers.authorization && req.headers.authorization.startsWith("Bearer")){
+                token = req.headers.authorization.split(" ")[1]  
+            }
+    
         }
 
         const payload = jwt.verify(token,process.env.JWT_SECRET)

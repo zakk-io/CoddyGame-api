@@ -24,7 +24,9 @@ const {
     joinTeam,
     listTeamJoinsRequests,
     acceptJoinRequest,
-    rejectJoinRequest
+    rejectJoinRequest,
+    createDirectJoinLink,
+    joinWithDirectJoinLink,
 } = require('../controllers/teams/members');
 
 //rate limiters
@@ -70,7 +72,9 @@ router.get('/api/teams/:team_id/join',[isTeamExists,amITeamMember("")],joinTeam)
 router.get('/api/teams/:team_id/join-requests',[isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"])],listTeamJoinsRequests);
 router.post('/api/teams/:team_id/join-requests/:join_request_id',[isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"])],acceptJoinRequest);
 router.get('/api/teams/:team_id/join-requests/:join_request_id',[isTeamExists,checkMembership(""),checkAuthorization(["leader"])],rejectJoinRequest);
-
+//direct join link
+router.post('/api/teams/:team_id/direct-join-link',[isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"])],createDirectJoinLink);
+router.get('/api/teams/:team_id/direct-join-link',[isTeamExists,amITeamMember("")],joinWithDirectJoinLink);
 
 
 

@@ -1,4 +1,4 @@
-const {Teams,Invitations,joinTeamRequestsModel} = require("../../models/teams")
+const {Teams,Invitations,joinTeamRequestsModel,directJoinLinkModel} = require("../../models/teams")
 const uuid = require("uuid")
 const nodemailer = require("nodemailer")
 require("dotenv").config
@@ -273,6 +273,16 @@ const changeMemberRole = async (req,res,next) => {
         const member_id = req.params.member_id
         const team_id = req.params.team_id
 
+        if(member_id.toString() === req.user.id.toString()){
+            return res.status(400).json({
+                "status": "fail",
+                "code" : "400",
+                "message": "you cannot change your own role",
+                "resource" : "members",
+            })
+        }
+
+
         const team = await Teams.findOneAndUpdate({
             id : team_id,
             "members._id" : member_id,
@@ -290,7 +300,6 @@ const changeMemberRole = async (req,res,next) => {
         }
 
         const member = team.members.find(member => member._id.toString() === member_id);
-
         return res.json({
             "status": "success",
             "code" : "200",
@@ -621,6 +630,97 @@ const rejectJoinRequest = async (req,res,next) => {
 
 
 
+
+//direct join link
+
+
+const createDirectJoinLink = async (req,res,next) => {
+    try {
+        const role = req.body.role
+
+        const directJoinLink =  await new directJoinLinkModel({
+            team_id : req.team._id,
+            role : role,
+            token : uuid.v4(),
+            expiresAt : new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)
+        })
+        await directJoinLink.save()
+
+        return res.status(201).json({
+            "status": "success",
+            "code" : "201",
+            "message": "direct join link has been created successfully",
+            "resource" : "directJoinLink",
+            "link" : `${process.env.BASE_URI}/api/teams/${req.team._id}/direct-join-link?token=${directJoinLink.token}`,
+            "expiresAt" : directJoinLink.expiresAt
+        })
+
+    } catch (error) {
+        console.log(error)
+        next(error)
+    }
+}
+
+
+const joinWithDirectJoinLink = async (req,res,next) => {
+    try {
+        if(req.amITeamMember){
+            return res.status(400).json({
+                "status": "fail",
+                "code" : "400",
+                "message": "you are already a member of this team",
+                "resource" : "teams",
+                "nextUri" : `${process.env.BASE_URI}/api/teams`
+            })
+        }
+
+        const token = req.query.token
+
+        const directJoinLink = await directJoinLinkModel.findOneAndUpdate({
+            token,
+            status : "pending",
+            team_id : req.team._id,
+            expiresAt : {$gt : new Date(Date.now())}
+        },{$set : {status : "accepted"}}, {new : true})
+
+        if(!directJoinLink){
+            return res.status(400).json({
+                "status": "fail",
+                "code" : "400",
+                "message": "invalid or expired direct join link",
+                "resource" : "directJoinLink",
+            })
+        }
+
+        await Teams.findOneAndUpdate(
+            { _id: req.team._id },
+            {
+              $addToSet: {
+                members: {
+                  _id: req.user.id,               
+                  email: req.user.email,
+                  role: directJoinLink.role
+                }
+              }
+            }
+          );
+
+        return res.status(200).json({
+            "status": "success",
+            "code" : "200",
+            "message": "user has been accepted as team member successfully",
+            "resource" : "teams",
+            "nextUri" : `${process.env.BASE_URI}/api/teams/${req.team._id}`
+        })
+
+    } catch (error) {
+        console.log(error)
+        next(error)
+    }
+}
+
+
+
 module.exports = {
     inviteUser,
     acceptInvitation,
@@ -632,5 +732,8 @@ module.exports = {
     joinTeam,
     listTeamJoinsRequests,
     acceptJoinRequest,
-    rejectJoinRequest
+    rejectJoinRequest,
+    createDirectJoinLink,
+    createDirectJoinLink,
+    joinWithDirectJoinLink
 }

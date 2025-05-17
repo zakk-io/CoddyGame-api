@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Team Management Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6 font-sans">
+  <div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
+    <h1 class="text-2xl font-bold">Team Management</h1>
+
+    <!-- Invite by Email -->
+    <section class="space-y-2">
+      <h2 class="text-lg font-semibold">Invite by Email</h2>
+      <div class="flex gap-2">
+        <input id="email" type="email" placeholder="User email"
+               class="flex-1 px-3 py-2 border rounded-md focus:ring focus:ring-blue-300"/>  
+        <select id="role" class="px-3 py-2 border rounded-md">
+          <option value="co-leader">Co-Leader</option>
+          <option value="editor">Editor</option>
+          <option value="viewer">Viewer</option>
+        </select>
+        <button onclick="inviteUser()"
+                class="btn btn-primary px-4 py-2">Invite</button>
+      </div>
+    </section>
+
+    <!-- Direct Join Link -->
+    <section class="space-y-2">
+      <h2 class="text-lg font-semibold">Create Direct Join Link</h2>
+      <div class="flex gap-2">
+        <select id="linkRole" class="px-3 py-2 border rounded-md">
+          <option value="co-leader">Co-Leader</option>
+          <option value="editor">Editor</option>
+          <option value="viewer">Viewer</option>
+        </select>
+        <button onclick="createJoinLink()"
+                class="btn btn-secondary px-4 py-2">Generate</button>
+        <input id="joinLinkOutput" readonly placeholder="Link appears here…"
+               class="flex-1 px-3 py-2 border rounded-md bg-gray-50"/>
+      </div>
+    </section>
+
+    <!-- Team Members -->
+    <section class="space-y-2">
+      <h2 class="text-lg font-semibold">Team Members</h2>
+      <ul id="memberList" class="divide-y divide-gray-200">
+        <!-- Populated in JS -->
+      </ul>
+    </section>
+  </div>
+
+  <script>
+    // ── Helpers ────────────────────────────────────────────────────────────────
+    const team_id = (() => {
+      const parts = window.location.pathname.split('/');
+      return parts[2] || null;
+    })();
+
+    async function apiFetch(path, options) {
+      const res = await fetch(`/api/teams/${team_id}${path}`, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options,
+      });
+      return res.json();
+    }
+
+    function showAlert(msg) {
+      alert(msg);
+    }
+
+    // ── Endpoints ──────────────────────────────────────────────────────────────
+
+    async function inviteUser() {
+      const email = document.getElementById('email').value;
+      const role  = document.getElementById('role').value;
+      const data  = await apiFetch('/members/invite', {
+        method: 'POST',
+        body: JSON.stringify({ email, role }),
+      });
+      showAlert(data.message);
+      fetchMembers();
+    }
+
+    async function createJoinLink() {
+      const role = document.getElementById('linkRole').value;
+      const data = await apiFetch('/direct-join-link', {
+        method: 'POST',
+        body: JSON.stringify({ role }),
+      });
+      document.getElementById('joinLinkOutput').value = data.link;
+    }
+
+    async function kickMember(member_id) {
+      const data = await apiFetch(`/members/${member_id}`, {
+        method: 'GET',
+      });
+      showAlert(data.message);
+      fetchMembers();
+    }
+
+    async function changeMemberRole(member_id, newRole) {
+      const data = await apiFetch(`/members/${member_id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ role: newRole }),
+      });
+      showAlert(data.message);
+      fetchMembers();
+    }
+
+    // ── Render Members ─────────────────────────────────────────────────────────
+
+    async function fetchMembers() {
+      const data = await apiFetch('/members', { method: 'GET' });
+      const list = document.getElementById('memberList');
+      list.innerHTML = '';
+      data.members.forEach(m => {
+        const li = document.createElement('li');
+        li.className = 'flex items-center justify-between py-3';
+        li.innerHTML = `
+          <div class="flex items-center gap-3">
+            <img src="${m.avatar || 'https://via.placeholder.com/32'}"
+                 alt="" class="w-8 h-8 rounded-full"/>
+            <div>
+              <p class="font-medium">${m.first_name} ${m.last_name}</p>
+              <p class="text-sm text-gray-500">${m.email}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <select onchange="changeMemberRole('${m._id}', this.value)"
+                    class="px-2 py-1 border rounded-md text-sm">
+              <option ${m.role==='co-leader'? 'selected':''} value="co-leader">Co-Leader</option>
+              <option ${m.role==='editor'? 'selected':''}    value="editor">Editor</option>
+              <option ${m.role==='viewer'? 'selected':''}    value="viewer">Viewer</option>
+            </select>
+            <button onclick="kickMember('${m._id}')"
+                    class="px-2 py-1 bg-red-500 text-white rounded-md text-sm">
+              Kick
+            </button>
+          </div>`;
+        list.appendChild(li);
+      });
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    fetchMembers();
+  </script>
+</body>
+</html>

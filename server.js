@@ -15,6 +15,16 @@ const cookieparser = require("cookie-parser")
 app.get('/register', (req, res) => {
     res.sendFile(path.join(__dirname, 'public','authentication','register.html'));
 });
+
+
+app.get('/teams/:team_id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public','teams','workplace.html'));
+});
+
+
+app.get('/teams/:team_id/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public','teams','dashboard.html'));
+});
 // test templates
 
 // Middlewares
