@@ -29,10 +29,23 @@ const {
     joinWithDirectJoinLink,
 } = require('../controllers/teams/members');
 
+
+//resources
+const {
+    createResource,
+    getResource,
+    getAllResources,
+    updateResource,
+    deleteResource,
+    getMyResources
+} = require('../controllers/teams/resources')
+
+
 //rate limiters
 const {
     createTeamRateLimit,
-    inviteUserRateLimit
+    inviteUserRateLimit,
+    createResourcesRateLimit
 } = require("../middlewares/teams")
 
 //middlewares
@@ -43,6 +56,9 @@ const {
     isEmailInTeam,
     isUserIdInTeam,
     amITeamMember,
+    isResourceExists,
+    checkResourceOwnership,
+    isTeamLeader
 } = require("../middlewares/teams")
 
 
@@ -75,6 +91,21 @@ router.get('/api/teams/:team_id/join-requests/:join_request_id',[isTeamExists,ch
 //direct join link
 router.post('/api/teams/:team_id/direct-join-link',[isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"])],createDirectJoinLink);
 router.get('/api/teams/:team_id/direct-join-link',[isTeamExists,amITeamMember("")],joinWithDirectJoinLink);
+
+
+
+//resources
+router.get('/api/teams/:team_id/resources/my',[isTeamExists,checkMembership("")],getMyResources);
+//basic features
+router.post('/api/teams/:team_id/resources',[isTeamExists,checkMembership(""),createResourcesRateLimit],createResource);
+router.get('/api/teams/:team_id/resources/:resource_id',[isTeamExists,checkMembership("public"),isResourceExists],getResource);
+router.get('/api/teams/:team_id/resources',[isTeamExists,checkMembership("public")],getAllResources);
+router.patch('/api/teams/:team_id/resources/:resource_id',[isTeamExists,checkMembership(""),isResourceExists,checkResourceOwnership],updateResource);
+router.delete('/api/teams/:team_id/resources/:resource_id',[isTeamExists,checkMembership(""),isResourceExists,checkResourceOwnership,checkAuthorization(["leader","co-leader"])],deleteResource);
+
+
+
+
 
 
 

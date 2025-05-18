@@ -1,5 +1,5 @@
 const {rateLimit} = require("express-rate-limit")
-const {Teams} = require("../models/teams")
+const {Teams,Resources} = require("../models/teams")
 
 
 //rateLimit
@@ -20,7 +20,7 @@ const createTeamRateLimit = rateLimit({
 
 
 const inviteUserRateLimit = rateLimit({
-    windowMs: 1 * 60 * 1000,
+    windowMs: 1 * 60 * 60 * 1000,
     limit: 5,
     legacyHeaders: false,
     standardHeaders: true,
@@ -32,6 +32,22 @@ const inviteUserRateLimit = rateLimit({
         "message": "Too many invitations, please try again later."
     }
 })
+
+
+const createResourcesRateLimit = rateLimit({
+    windowMs: 1 * 60 * 60 * 1000,
+    limit: 10,
+    legacyHeaders: false,
+    standardHeaders: true,
+    message: {
+        "status": "fail",
+        "code": 429,
+        "type": "rate limit error",
+        "resource" : "Resources",
+        "message": "too many requests, please try again after 1 hour"
+    }
+})
+
 //rateLimit
 
 
@@ -50,7 +66,7 @@ const isTeamExists = async (req,res,next) => {
             })
         }
         req.team = team
-        next()
+        return next()
     } catch (error) {  
         console.error(error)
         next(error)
@@ -66,6 +82,7 @@ function checkMembership(passCheck) {
                 console.log("pass checkMembership Middleware")
                 return next()
             }
+            
             console.log("checkMembership Middleware")
     
             const isMember = team.members.some((member) => member._id.toString() === req.user.id.toString())
@@ -90,6 +107,11 @@ function checkMembership(passCheck) {
 function checkAuthorization(role) {
     return async (req,res,next) => {
         try {
+            if(req.isResourceOwner){
+                console.log("bypass checkAuthorization Middleware")
+                return next()
+            }
+
             console.log("checkAuthorization Middleware")
 
             const team = req.team
@@ -212,6 +234,70 @@ function amITeamMember() {
 
 
 
+const isTeamLeader = async (req,res,next) => {
+    try {
+        console.log("isTeamLeader Middleware")
+        if(req.user.id.toString() === req.team.creator.toString()){
+            req.isTeamLeader = true
+            return next()
+        }
+
+        req.isTeamLeader = false
+        return next()
+    } catch (error) {
+        console.error(error)
+        next(error)  
+        
+    }
+}
+
+
+
+
+//resource middleware
+const isResourceExists = async (req,res,next) => {
+    try {
+        console.log("isResourceExists Middleware")
+
+        const resource_id = req.params.resource_id
+        const resource = await Resources.findOne({_id : resource_id , team_id : req.team._id})
+        if(!resource){
+            return res.status(404).json({
+                "status": "fail",
+                "code": 404,
+                "resource" : "Resources",
+                "message": "resource not found",
+                "nextUri" : `${process.env.BASE_URI}/api/teams/${req.team._id}/resources`
+            })
+        }
+
+        req.resource = resource
+        return next()
+    } catch (error) {
+        console.log(error)
+        next(error)
+    }
+}
+
+
+const checkResourceOwnership = async (req,res,next) => {
+    try {
+        console.log("checkResourceOwnership Middleware")
+        
+        const resource = req.resource
+        if(resource.creator.toString() === req.user.id.toString()){
+            req.isResourceOwner = true
+            return next()
+        }
+        req.isResourceOwner = false
+        return next()
+    } catch (error) {
+        console.log(error)
+        next(error)
+    }
+}
+
+
 
 
 
@@ -219,6 +305,7 @@ module.exports = {
     //rateLimit
     createTeamRateLimit,
     inviteUserRateLimit,
+    createResourcesRateLimit,
     //rateLimit
     isTeamExists,
     checkMembership,
@@ -226,4 +313,7 @@ module.exports = {
     isEmailInTeam,
     isUserIdInTeam,
     amITeamMember,
+    isResourceExists,
+    checkResourceOwnership,
+    isTeamLeader,
 }
