@@ -16,7 +16,7 @@
   "author": "mohamed zakaria",
   "license": "ISC",
   "dependencies": {
-    "bcrypt": "^5.1.1",
+    "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "express": "^5.1.0",
     "mongoose": "^8.13.1",
