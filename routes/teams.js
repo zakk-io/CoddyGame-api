@@ -9,7 +9,8 @@ const {
     listUserTeams,
     updateTeam,
     deleteTeam ,
-    leaveTeam
+    leaveTeam,
+    sendEmail
 } = require('../controllers/teams/workplace');
 
 //members
@@ -72,6 +73,8 @@ router.get('/api/teams/:team_id',[isTeamExists,checkMembership("public")],getTea
 router.put('/api/teams/:team_id',[isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"])],updateTeam);
 router.delete('/api/teams/:team_id',[isTeamExists,checkMembership(""),checkAuthorization(["leader"])],deleteTeam);
 router.get('/api/teams/:team_id/leave',isTeamExists,checkMembership(""),checkAuthorization(["co-leader","editor","viewer"]),leaveTeam);
+router.post('/api/teams/:team_id/send-email',isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"]),sendEmail);
+
 
 //members
 //invitations functionality

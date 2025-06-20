@@ -1,7 +1,21 @@
 const {Teams,Invitations,joinTeamRequestsModel} = require("../../models/teams")
 const {genrateTeamAvatar} = require("../../utilities")
 const uuid = require("uuid")
+const validator = require('validator');
 require("dotenv").config()
+const nodemailer = require("nodemailer")
+
+
+
+
+//emial service configuration
+var transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "coddygame1@gmail.com",
+      pass: process.env.GOOGLE_APP_PASSWORD, 
+    },
+});
 
 
 
@@ -58,7 +72,9 @@ const getTeam = async (req,res,next) => {
                 "type": team.type,
                 "description": team.description,
                 "avatar" : team.avatar,
-                "createdAt": team.createdAt
+                "createdAt": team.createdAt,
+                "resource_count": team.resources.length,
+                "members_count": team.members.length,
             }
         })
 
@@ -228,6 +244,48 @@ const leaveTeam = async (req,res,next) => {
     }
 }
 
+
+
+const sendEmail = async (req,res,next) => {
+    try {
+        const {reciver_email,email_subject,email_content} = req.body
+        if(!reciver_email || !email_subject){
+            return res.status(200).json({
+                "status": "fail",
+                "code" : "400",
+                "message": "reciver_email or email_subject is not provided",
+            })   
+        }
+
+        if(!validator.isEmail(reciver_email)){
+            return res.status(200).json({
+                "status": "fail",
+                "code" : "400",
+                "message": "reciver_email is not valid email",
+            })   
+        }
+
+        // Send invitation link 
+        await transporter.sendMail({
+            from: '"CoddyGame 🚀" <coddygame1@gmail.com>',
+            to: reciver_email,
+            subject: email_subject,
+            html: email_content,
+        });
+
+
+        return res.status(201).json({
+            "status": "success",
+            "code" : "200",
+            "message": "email has been sent successfully",
+        })
+
+    } catch (error) {
+        console.log(error)
+        next(error)  
+    }
+}
+
 module.exports = {
     createTeam,
     getTeam,
@@ -235,7 +293,8 @@ module.exports = {
     listUserTeams,
     updateTeam,
     deleteTeam,
-    leaveTeam
+    leaveTeam,
+    sendEmail
 }
 
 

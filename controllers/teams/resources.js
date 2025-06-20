@@ -3,46 +3,62 @@ require("dotenv").config()
 
 
 
+// controllers/resources.js
+
 //create a new resource
-const createResource = async (req,res,next) => {
+const createResource = async (req, res, next) => {
     try {
-        const {name,content,type} = req.body
-
-        const resource = await new Resources({
-            name,
-            team_id : req.team._id,
-            creator : req.user.id,
-            content,
-            type,
-            createdAt : Date(Date.now())
-        })
-        await resource.save()
-
-        await Teams.findByIdAndUpdate({_id : req.team._id},
-            {
-              $addToSet : { resources : resource._id }
-            }
-        )
-
-        return res.status(201).json({
-            "status": "success",
-            "code" : "201",
-            "message": "resource has been created successfully",
-            "resource" : "Resources",
-            "data" : {
-                "name" : resource.name,
-                "content" : resource.content,
-                "type" : resource.type,
-                "createdAt" : resource.createdAt,
-            },
-            "nextUri" : `${process.env.BASE_URI}/api/teams/${req.team._id}/resources/${resource._id}`,
-        })
+      const { name, content, type, language } = req.body
+  
+      // 1) build & save the new Resource
+      const resourceDoc = new Resources({
+        name,
+        team_id : req.team._id,
+        creator : req.user.id,
+        content,
+        type,
+        language,
+        createdAt : new Date(),
+        updatedAt : new Date()
+      })
+      await resourceDoc.save()
+  
+      // 2) add to the parent Team
+      await Teams.findByIdAndUpdate(
+        req.team._id,
+        { $addToSet: { resources: resourceDoc._id } }
+      )
+  
+      // 3) re-query & populate the creator field
+      const populated = await Resources
+        .findById(resourceDoc._id)
+        .populate('creator', 'username first_name last_name avatar')
+        .exec()
+  
+      // 4) send your response
+      return res.status(201).json({
+        status:  'success',
+        code:    201,
+        message: 'Resource has been created successfully',
+        data: {
+          id:        populated._id,
+          name:      populated.name,
+          content:   populated.content,
+          type:      populated.type,
+          language:  populated.language,
+          createdAt: populated.createdAt,
+          updatedAt: populated.updatedAt,
+          creator:   populated.creator,  // already has only the 4 fields you populated
+        },
+        nextUri: `${process.env.BASE_URI}/api/teams/${req.team._id}/resources/${populated._id}`
+      })
     } catch (error) {
-        console.log(error)
-        next(error)
+      next(error)
     }
-}
+  }
+  
 
+  
 
 //get single resource
 const getResource = async (req,res,next) => {
@@ -66,6 +82,7 @@ const getResource = async (req,res,next) => {
                 },
                 "content" : resource.content,
                 "type" : resource.type,
+                "language" : resource.language,
                 "createdAt" : resource.createdAt,
                 "updatedAt" : resource.updatedAt,
 
@@ -103,6 +120,7 @@ const getAllResources = async (req,res,next) => {
             "count" : resources.length,
             "data" : resources.map(resource => {
                 return {
+                    "id" : resource._id,
                     "name" : resource.name,
                     "creator" : {
                         "username" : resource.creator.username,
@@ -112,6 +130,7 @@ const getAllResources = async (req,res,next) => {
                     },
                     "content" : resource.content,
                     "type" : resource.type,
+                    "language" : resource.language,
                     "createdAt" : resource.createdAt,
                     "updatedAt" : resource.updatedAt
                 }
@@ -223,6 +242,7 @@ const getMyResources = async (req,res,next) => {
                     },
                     "content" : resource.content,
                     "type" : resource.type,
+                    "language" : resource.language,
                     "createdAt" : resource.createdAt,
                     "updatedAt" : resource.updatedAt
                 }

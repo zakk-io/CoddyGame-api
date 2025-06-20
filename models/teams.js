@@ -1,3 +1,4 @@
+const { language } = require('googleapis/build/src/apis/language');
 const mongoose = require('mongoose');
 const validator = require('validator');
 
@@ -196,6 +197,12 @@ const resourcesSchema = new mongoose.Schema({
         type : String,
         required : true,
         enum : ["document", "whiteboard" , "codebase"],
+    },
+
+    language : {
+        type : String,
+        required : false,
+        enum : ["javascript", "python", "java", "c","php"],
     },
 
     createdAt : {
