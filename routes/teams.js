@@ -10,7 +10,7 @@ const {
     updateTeam,
     deleteTeam ,
     leaveTeam,
-    sendEmail
+    sendEmail,
 } = require('../controllers/teams/workplace');
 
 //members
@@ -28,6 +28,7 @@ const {
     rejectJoinRequest,
     createDirectJoinLink,
     joinWithDirectJoinLink,
+    memberInfo
 } = require('../controllers/teams/members');
 
 
@@ -83,6 +84,7 @@ router.get('/api/teams/:team_id/members/accept-invitation',[isTeamExists,amITeam
 router.get('/api/teams/:team_id/members/invitations',isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"]),listInvitations);
 router.get('/api/teams/:team_id/members/invitations/:invitation_id',isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"]),cancelInvitation);
 //members mangment
+router.get('/api/teams/:team_id/members/me',isTeamExists,checkMembership(""),checkAuthorization(""),memberInfo);
 router.get('/api/teams/:team_id/members',isTeamExists,checkMembership(""),checkAuthorization(""),listTeamMembers);
 router.put('/api/teams/:team_id/members/:member_id',isTeamExists,checkMembership(""),checkAuthorization(["leader"]),changeMemberRole);
 router.get('/api/teams/:team_id/members/:member_id/kick',isTeamExists,checkMembership(""),checkAuthorization(["leader"]),isUserIdInTeam(""),kickMember);

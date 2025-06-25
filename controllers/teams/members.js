@@ -58,8 +58,11 @@ const inviteUser = async (req,res,next) => {
             "message": "invitation has been sent successfully",
             "resource" : "invitations",
             "invitation": {
+                "_id": invitation._id,
                 "email": invitation.email,
-                "role": invitation.role
+                "role": invitation.role,
+                "status": "pending",
+                "expiresAt": invitation.expiresAt
             },
             "nextUri" : `${process.env.BASE_URI}/api/teams/${team_id}/members/invitations`
         })
@@ -170,7 +173,7 @@ const listInvitations = async (req,res,next) => {
             "code" : "200",
             "message": "invitations fetched successfully",
             "resource" : "invitations",
-            "invitations": {
+            "data": {
                 invitations
             }
         })
@@ -232,7 +235,7 @@ const listTeamMembers = async (req,res,next) => {
             "count" : team.members.length,
             "members" : team.members.map((member) => {
                 return {
-                    _id : member._id._id,
+                    id : member._id._id,
                     email : member.email,
                     role : member.role,
                     username : member._id.username,
@@ -534,7 +537,7 @@ const acceptJoinRequest = async (req,res,next) => {
             _id : join_request_id,
             team_id : req.team._id,
             status : "pending"
-        }).populate("user_id","email")
+        }).populate("user_id","email username avatar")
 
 
         if(!joinTeamRequest){
@@ -581,8 +584,11 @@ const acceptJoinRequest = async (req,res,next) => {
             "status": "success",
             "code" : "200",
             "message": "user has been accepted in the team",
-            "data" : {
-                "user_id" : joinTeamRequest.user_id._id,
+            "member" : {
+                "id" : joinTeamRequest.user_id._id,
+                "username" : joinTeamRequest.user_id.username,
+                "email" : joinTeamRequest.user_id.email,
+                "avatar" : joinTeamRequest.user_id.avatar,
                 "role" : role,
             },
             "resource" : "teams",
@@ -719,7 +725,35 @@ const joinWithDirectJoinLink = async (req,res,next) => {
     }
 }
 
+const memberInfo = async (req,res,next) => {
+    try {
+        const user = req.user
+        const team = req.team
 
+        const member = team.members.find(m => m._id.toString() === user.id.toString());
+
+        return res.status(200).json({
+            "status": "success",
+            "code" : "200",
+            "message": "member info fetched successfully",
+            "resource" : 'member',
+            "member": {
+                "id": user.id,
+                "email": user.email,
+                "role": member.role,
+                "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "avatar": user.avatar
+            },
+        })
+
+
+    } catch (error) {
+        console.log(error)
+        next(error)
+    }
+}
 
 module.exports = {
     inviteUser,
@@ -735,5 +769,6 @@ module.exports = {
     rejectJoinRequest,
     createDirectJoinLink,
     createDirectJoinLink,
-    joinWithDirectJoinLink
+    joinWithDirectJoinLink,
+    memberInfo
 }
