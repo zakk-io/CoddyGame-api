@@ -1,7 +1,13 @@
 const express = require('express');
-const app = express();
 const mongoose = require('mongoose');
 const cors = require("cors")
+const {Server} = require("socket.io")
+const http = require("http")
+
+const app = express()
+const server = http.createServer(app)
+
+const cookieparser = require("cookie-parser")
 
 require("dotenv").config()
 const path = require('path');
@@ -10,35 +16,69 @@ const {authMiddleware} = require("./middlewares/authentication")
 const authRoutes = require("./routes/auth")
 const teamsRoutes = require("./routes/teams")
 
-const cookieparser = require("cookie-parser")
+
+
+
+// mongodb connection
+mongoose.connect(process.env.MONGO_URI).then(() => console.log('mongodb connected!'));
 
 app.use(cors({
     origin: process.env.FRONTEND_URI,    
     credentials: true,                  
 }));
 
-// test templates
+
+const io = new Server(server, {
+    cors: {
+        origin: process.env.FRONTEND_URI,  
+        methods: ["GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"]
+    }
+});
+
+
+
+//socket.io
+io.on("connection", async (socket) =>{
+
+    //document
+    socket.on("join_document",document_id => {
+        socket.join(document_id)
+    })
+
+    socket.on("emit_document_data",(data,document_id) => {
+        socket.to(document_id).emit("brodcast_document_data", data);
+    })
+
+    socket.on('emit_user_cursor_document',(data, document_id) => {
+        socket.to(document_id).emit("brodcast_user_cursor_document", data);
+    })
+
+
+    //codebase
+    socket.on("join_codebase",codebase_id => {
+        socket.join(codebase_id)
+    })
+
+    socket.on("emit_codebase_data",(data,codebase_id) => {
+        socket.to(codebase_id).emit("brodcast_codebase_data", data);
+    })
+
+
+
+})
+//socket.io
+
+
+
+
+
+
+
+
+
 app.get('/register', (req, res) => {
     res.sendFile(path.join(__dirname, 'public','authentication','register.html'));
 });
-
-
-app.get('/teams/:team_id', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public','teams','workplace.html'));
-});
-
-
-app.get('/teams/:team_id/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public','teams','dashboard.html'));
-});
-
-
-
-//document
-app.get('/teams/:team_id/document/:document_id', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public','teams','quill.html'));
-});
-// test templates
 
 
 // Middlewares
@@ -51,20 +91,9 @@ app.use(teamsRoutes)
 
 
 
-// mongodb connection
-mongoose.connect(process.env.MONGO_URI).then(() => console.log('mongodb connected!'));
-
-// hello world route
-app.get('/welcome',[authMiddleware], (req, res) => {
-    res.json({"message" : `Welcome ${req.user.username} 🚀`});
-});
-// hello world  route
 
 
 
-app.listen(3000, () => {
-    console.log(`Server is running on port 3000`);
-});
 
 
 //errors Middlewares
@@ -73,4 +102,10 @@ app.use(validationError)
 app.use(validateObjectId)
 app.use(valueDublictionsError)
 app.use(CastError)
+
+
+
+server.listen(3000, () => {
+    console.log(`Server is running on port 3000`);
+});
 

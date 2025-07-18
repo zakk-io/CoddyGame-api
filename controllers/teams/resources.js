@@ -73,6 +73,7 @@ const getResource = async (req,res,next) => {
             "message": "resource has been fetched successfully",
             "resource" : "Resources",
             "data" : {
+                "id" : resource._id,
                 "name" : resource.name,
                 "creator" : {
                     "username" : resource.creator.username,
