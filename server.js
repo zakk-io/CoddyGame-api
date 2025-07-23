@@ -36,7 +36,6 @@ const io = new Server(server, {
 });
 
 
-
 //socket.io
 io.on("connection", async (socket) =>{
 
@@ -62,6 +61,27 @@ io.on("connection", async (socket) =>{
     socket.on("emit_codebase_data",(data,codebase_id) => {
         socket.to(codebase_id).emit("brodcast_codebase_data", data);
     })
+
+
+    //chat messages
+    socket.on("join_chat", codebase_id => {
+        socket.join(codebase_id)
+    })
+
+    socket.on("emit_chat_message", (codebase_id, data) => {
+        socket.to(codebase_id).emit("brodcast_chat_message", data);
+    })
+
+
+    //whiteboard
+    socket.on("join_whiteboard", whiteboard_id => {
+        socket.join(whiteboard_id)
+    })
+
+
+    socket.on("emit_whiteboard_data", (data, whiteboard_id) => {
+        socket.to(whiteboard_id).emit("brodcast_whiteboard_data", data);
+    });
 
 
 

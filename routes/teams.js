@@ -43,6 +43,14 @@ const {
 } = require('../controllers/teams/resources')
 
 
+//messages
+const {
+    createMessage,
+    getMessages,
+    senderId
+} = require('../controllers/teams/messages');
+
+
 //rate limiters
 const {
     createTeamRateLimit,
@@ -110,6 +118,10 @@ router.delete('/api/teams/:team_id/resources/:resource_id',[isTeamExists,checkMe
 
 
 
+//messages
+router.post('/api/teams/:team_id/resources/:resource_id/messages',[isTeamExists,checkMembership(""),isResourceExists],createMessage);
+router.get('/api/teams/:team_id/resources/:resource_id/messages',[isTeamExists,checkMembership(""),isResourceExists],getMessages);
+router.get('/api/teams/:team_id/resources/:resource_id/messages/sender-id/me',isTeamExists,checkMembership(""),isResourceExists,senderId);
 
 
 

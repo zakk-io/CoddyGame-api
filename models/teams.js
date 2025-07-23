@@ -218,12 +218,36 @@ const resourcesSchema = new mongoose.Schema({
 
 
 
+const messagesSchema = new mongoose.Schema({
+    resource_id: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Resources',
+        required: true,
+    },
+    sender: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Users',
+        required: true,
+    },
+    text: {
+        type: String,
+        required: true,
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    },
+});
+
+
 
 const Teams = mongoose.model('Teams', TeamSchema , 'teams');
 const Invitations = mongoose.model('Invitations', InvitationSchema , 'invitations');
 const joinTeamRequestsModel = mongoose.model('joinTeamRequestsModel', joinTeamRequestsSchema , 'joinTeamRequestsModel');
 const directJoinLinkModel = mongoose.model('directJoinLinkModel', directJoinLinkSchema , 'directJoinLinkModel');
 const Resources = mongoose.model('Resources', resourcesSchema , 'Resources');
+const Messages = mongoose.model('Messages', messagesSchema , 'Messages');
+
 
 
 
@@ -233,4 +257,5 @@ module.exports = {
     joinTeamRequestsModel,
     directJoinLinkModel,
     Resources,
+    Messages
 };
