@@ -31,7 +31,7 @@ Authorization: Bearer {{linkedin_token}}
 
 ### get single resource
 GET http://127.0.0.1:3000/api/teams/{{google_team_id}}/resources/682995d3a5ef77b61a944c1d
-Authorization: Bearer {{linkedin_token}}
+
 
 
 

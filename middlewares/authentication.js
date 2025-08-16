@@ -35,7 +35,16 @@ const loginUserLimiter = rateLimit({
 
 
 
-const authMiddleware = (req,res,next) => {
+const PUBLIC_ROUTES = [
+    { method: 'GET', pattern: /^\/api\/teams\/[^/]+\/resources\/[^/]+$/ },
+    { method: 'GET', pattern: /^\/api\/teams\/[^/]+\/members\/accept-invitation$/ },
+  ];
+  
+  const authMiddleware = (req, res, next) => {
+    // allow public routes without a token
+    if (PUBLIC_ROUTES.some(r => r.method === req.method && r.pattern.test(req.path))) {
+      return next();
+    }
     try {
         let token
         token = req.cookies.authToken
@@ -91,9 +100,14 @@ const authMiddleware = (req,res,next) => {
 }
 
 
+
+
+
+
+
 module.exports = {
     registerUserLimiter,
     loginUserLimiter,
-    authMiddleware
+    authMiddleware,
 }
 

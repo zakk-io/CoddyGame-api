@@ -68,17 +68,19 @@ const {
     amITeamMember,
     isResourceExists,
     checkResourceOwnership,
-    isTeamLeader
+    isTeamLeader,
 } = require("../middlewares/teams")
 
 
-
+//no auth check
+router.get('/api/teams/:team_id/members/accept-invitation',[isTeamExists,amITeamMember("")],acceptInvitation);
+router.get('/api/teams/:team_id/resources/:resource_id',[isTeamExists,checkMembership("public"),isResourceExists],getResource);
+router.get('/api/teams/:team_id',[isTeamExists,checkMembership("public")],getTeam);
 //workplace
 router.use(authMiddleware)
 router.post('/api/teams',[createTeamRateLimit],createTeam);
 router.get('/api/teams',listUserTeams);
 router.get('/api/teams/public',listPublicTeams);
-router.get('/api/teams/:team_id',[isTeamExists,checkMembership("public")],getTeam);
 router.put('/api/teams/:team_id',[isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"])],updateTeam);
 router.delete('/api/teams/:team_id',[isTeamExists,checkMembership(""),checkAuthorization(["leader"])],deleteTeam);
 router.get('/api/teams/:team_id/leave',isTeamExists,checkMembership(""),checkAuthorization(["co-leader","editor","viewer"]),leaveTeam);
@@ -88,7 +90,6 @@ router.post('/api/teams/:team_id/send-email',isTeamExists,checkMembership(""),ch
 //members
 //invitations functionality
 router.post('/api/teams/:team_id/members/invitations',[isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"]),isEmailInTeam(),inviteUserRateLimit],inviteUser);
-router.get('/api/teams/:team_id/members/accept-invitation',[isTeamExists,amITeamMember("")],acceptInvitation);
 router.get('/api/teams/:team_id/members/invitations',isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"]),listInvitations);
 router.get('/api/teams/:team_id/members/invitations/:invitation_id',isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"]),cancelInvitation);
 //members mangment
@@ -111,7 +112,6 @@ router.get('/api/teams/:team_id/direct-join-link',[isTeamExists,amITeamMember(""
 router.get('/api/teams/:team_id/resources/my',[isTeamExists,checkMembership("")],getMyResources);
 //basic features
 router.post('/api/teams/:team_id/resources',[isTeamExists,checkMembership(""),createResourcesRateLimit],createResource);
-router.get('/api/teams/:team_id/resources/:resource_id',[isTeamExists,checkMembership("public"),isResourceExists],getResource);
 router.get('/api/teams/:team_id/resources',[isTeamExists,checkMembership("public")],getAllResources);
 router.patch('/api/teams/:team_id/resources/:resource_id',[isTeamExists,checkMembership(""),isResourceExists,checkResourceOwnership],updateResource);
 router.delete('/api/teams/:team_id/resources/:resource_id',[isTeamExists,checkMembership(""),isResourceExists,checkResourceOwnership,checkAuthorization(["leader","co-leader"])],deleteResource);

@@ -24,7 +24,7 @@ Content-Type: application/json
 
 {
     "email" : "mozakk.io@gmail.com",
-    "password": "testpassU24ord"
+    "password": "24019.io"
 }
 
 ### auth token info

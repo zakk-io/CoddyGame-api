@@ -84,6 +84,25 @@ io.on("connection", async (socket) =>{
     });
 
 
+    //audio call
+    socket.on("join-call",call_id => {
+        socket.join(call_id)
+        socket.to(call_id).emit("new-socket",socket.id)
+    })
+
+    socket.on("offer",data => {
+        socket.to(data.to).emit("recive-offer",{"from":socket.id,"offer":data.offer})
+    })
+
+    socket.on("answer",data => {
+        socket.to(data.to).emit("recive-answer",{"from":socket.id,"answer":data.answer})
+    })
+
+    socket.on("icecandidate",data => {
+        socket.to(data.to).emit("recive-icecandidate",{"from":socket.id,"candidate":data.candidate})
+    })
+
+
 
 })
 //socket.io
@@ -96,9 +115,16 @@ io.on("connection", async (socket) =>{
 
 
 
-app.get('/register', (req, res) => {
+app.get('/accounts/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public','authentication','login.html'));
+});
+
+
+
+app.get('/accounts/register', (req, res) => {
     res.sendFile(path.join(__dirname, 'public','authentication','register.html'));
 });
+
 
 
 // Middlewares
