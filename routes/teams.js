@@ -113,7 +113,7 @@ router.get('/api/teams/:team_id/resources/my',[isTeamExists,checkMembership("")]
 //basic features
 router.post('/api/teams/:team_id/resources',[isTeamExists,checkMembership(""),createResourcesRateLimit],createResource);
 router.get('/api/teams/:team_id/resources',[isTeamExists,checkMembership("public")],getAllResources);
-router.patch('/api/teams/:team_id/resources/:resource_id',[isTeamExists,checkMembership(""),isResourceExists,checkResourceOwnership],updateResource);
+router.patch('/api/teams/:team_id/resources/:resource_id',[isTeamExists,checkMembership(""),isResourceExists,checkAuthorization(["leader","co-leader","editor"])],updateResource);
 router.delete('/api/teams/:team_id/resources/:resource_id',[isTeamExists,checkMembership(""),isResourceExists,checkResourceOwnership,checkAuthorization(["leader","co-leader"])],deleteResource);
 
 

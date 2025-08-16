@@ -147,16 +147,6 @@ const getAllResources = async (req,res,next) => {
 //update resource
 const updateResource = async (req,res,next) => {
     try {
-        if(!req.isResourceOwner){
-            return res.status(403).json({
-                "status": "fail",
-                "code" : 403,
-                "message": "you are not authorized to update this resource",
-                "resource" : "Resources",
-                "nextUri" : `${process.env.BASE_URI}/api/teams/${req.team._id}/resources`,
-            })
-        }
-        
         const resource = await Resources.findByIdAndUpdate(
             req.params.resource_id,
             {$set : {
