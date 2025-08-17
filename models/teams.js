@@ -71,46 +71,6 @@ const TeamSchema = new mongoose.Schema({
 })
 
 
-const InvitationSchema = new mongoose.Schema({
-    email : {
-        type : String,
-        required : true,
-        validate : {
-            validator : validator.isEmail,
-            message : "Please provide a valid email",
-        }
-    },
-
-    role : {
-        type : String,
-        enum : ["co-leader","editor","viewer"],
-        require : true
-    },
-
-    team_id : {
-        type : mongoose.Types.ObjectId,
-        ref: 'Teams',
-        required : true,
-    },
-
-    token : {
-        type : String,
-        required : true,
-        unique : true,
-    },
-
-    expiresAt : {
-        type : Date,
-        required : true,
-    },
-
-    status : {
-        type : String,
-        enum : ["pending","accepted","rejected","cancelled"],
-        default : "pending",
-    }
-})
-
 
 const joinTeamRequestsSchema = new mongoose.Schema({
     team_id : {
@@ -242,7 +202,6 @@ const messagesSchema = new mongoose.Schema({
 
 
 const Teams = mongoose.model('Teams', TeamSchema , 'teams');
-const Invitations = mongoose.model('Invitations', InvitationSchema , 'invitations');
 const joinTeamRequestsModel = mongoose.model('joinTeamRequestsModel', joinTeamRequestsSchema , 'joinTeamRequestsModel');
 const directJoinLinkModel = mongoose.model('directJoinLinkModel', directJoinLinkSchema , 'directJoinLinkModel');
 const Resources = mongoose.model('Resources', resourcesSchema , 'Resources');
@@ -253,7 +212,6 @@ const Messages = mongoose.model('Messages', messagesSchema , 'Messages');
 
 module.exports = {
     Teams,
-    Invitations,
     joinTeamRequestsModel,
     directJoinLinkModel,
     Resources,

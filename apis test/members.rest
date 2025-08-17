@@ -1,7 +1,7 @@
 @linkedin_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZjNmYTQwNmRkOWJmNDJlNWZmYjU5YyIsImVtYWlsIjoibW96YWtrLmlvQGdtYWlsLmNvbSIsInVzZXJuYW1lIjoibW96YWtrLmlvIiwiZmlyc3RfbmFtZSI6Ik1vaGFtbWVkIiwibGFzdF9uYW1lIjoiWmFrYXJpYSIsImF2YXRhciI6Imh0dHBzOi8vbWVkaWEubGljZG4uY29tL2Rtcy9pbWFnZS92Mi9ENEUwM0FRRXNjR3hvUmJnT0F3L3Byb2ZpbGUtZGlzcGxheXBob3RvLXNocmlua184MDBfODAwL0I0RVpQb3NHajZIc0FjLS8wLzE3MzQ3NzU2OTU5MTA_ZT0xNzUyNzEwNDAwJnY9YmV0YSZ0PVdYbEExRGJlZDJQalotUTAyUkYzQlBfX3RQVVFOWmZVSDVkbElkVUF5NFUiLCJpYXQiOjE3NDcwNDMzMjksImV4cCI6MTc0NzY0ODEyOX0.gAfdj9lNnBIUlPAqX5H-NJUlHLIjQ8d_W82l8FUp0DU
 @google_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZjNmYTk4NmRkOWJmNDJlNWZmYjVhMiIsImVtYWlsIjoidWcyNDI0Nzg3QGluZXMuYWMucnciLCJ1c2VybmFtZSI6InVnMjQyNDc4NyIsImZpcnN0X25hbWUiOiJNT0hBTUVEIEFITUVEIiwibGFzdF9uYW1lIjoiTW9tYWhlZCBaYWthcmlhIiwiYXZhdGFyIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSmtDanZtMkh5QTdkX1VfRjhrTG0zT0JFREN2OE9ERy1KcnZCb3JxR2lJWFBCZmxRPXM5Ni1jIiwiaWF0IjoxNzQ1NjgxNzEzLCJleHAiOjE3NDYyODY1MTN9.LZubYerEqB2_QxDrngpXH6YkKZzfF-m_Y849PS4Kx2c
 
-@gorwanda_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MjFjNDllNmI3MTM1ODkwNTFjYmI1MSIsImVtYWlsIjoiZ29yd2FuZGE3NEBnbWFpbC5jb20iLCJ1c2VybmFtZSI6ImdvcndhbmRhNzQiLCJmaXJzdF9uYW1lIjoiR28iLCJsYXN0X25hbWUiOiJSd2FuZGEiLCJhdmF0YXIiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NMTkR0d2dDSHVPUVRsSXJFYjUxUFd3RHhvMk5pX0ltc0djM015TWZYWjNodThKQUE9czk2LWMiLCJpYXQiOjE3NDcwNDM0ODYsImV4cCI6MTc0NzY0ODI4Nn0.YnA1qL-ij2GDentX1EavAQZvMlM_sOG6--bKYsnv9lw
+@gorwanda_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MjFjNDllNmI3MTM1ODkwNTFjYmI1MSIsImVtYWlsIjoiZ29yd2FuZGE3NEBnbWFpbC5jb20iLCJ1c2VybmFtZSI6ImdvcndhbmRhNzQiLCJmaXJzdF9uYW1lIjoiR28iLCJsYXN0X25hbWUiOiJSd2FuZGEiLCJhdmF0YXIiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NMTkR0d2dDSHVPUVRsSXJFYjUxUFd3RHhvMk5pX0ltc0djM015TWZYWjNodThKQUE9czk2LWMiLCJpYXQiOjE3NTUzMzMzNDksImV4cCI6MTc1NTkzODE0OX0.g1ONpKAFZAXiVdgI3QrWqA9P8nLMTTdl5TLkfgaT9fk
 
 @linkedin_team_id = 955c7caa-fc27-48dd-b8aa-4c33b258f311
 
@@ -11,25 +11,18 @@
 
 
 ### invite user
-POST http://127.0.0.1:3000/api/teams/{{google_team_id}}/members/invitations
+POST http://127.0.0.1:3000/api/teams/{{linkedin_team_id}}/members/invitations
 Content-Type: application/json
-Authorization: Bearer {{google_token}}
+Authorization: Bearer {{gorwanda_token}}
 
 {
-    "email" : "mozakk.io@gmail.com",
-    "role" : "co-leader"
+    "email" : "ug2424787@ines.ac.rw",
+    "role" : "editor"
 }
 
-
-### accept invitation
-GET http://127.0.0.1:3000/api/teams/68037e1d65205a28c106e45f/members/accept-invitation?token=83838ac6-b0a5-4c85-bb66-bacc86d11cde
-Authorization: Bearer {{linkedin_token}}
+### 
 
 
-
-### list team invitations
-GET http://127.0.0.1:3000/api/teams/{{google_team_id}}/members/invitations?status=rejected
-Authorization: Bearer {{google_token}}
 
 
 

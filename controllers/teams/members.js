@@ -1,4 +1,6 @@
-const {Teams,Invitations,joinTeamRequestsModel,directJoinLinkModel} = require("../../models/teams")
+const {Teams,joinTeamRequestsModel,directJoinLinkModel} = require("../../models/teams")
+const {Users} = require("../../models/users")
+
 const uuid = require("uuid")
 const nodemailer = require("nodemailer")
 require("dotenv").config
@@ -19,34 +21,49 @@ const inviteUser = async (req,res,next) => {
         const {email,role} = req.body
         const team_id = req.params.team_id
 
-        const token = uuid.v4()
         if(req.isEmailInTeam){
             return res.status(400).json({
                 "status": "fail",
                 "code" : "400",
                 "message": "user is already a member of the team",
-                "resource" : "invitations",
             })
         }
 
-        const invitation = await new Invitations({
-            email,
-            role,
-            team_id : req.team._id,
-            token : token,
-            expiresAt : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        }).save()
-        
+        //fetch user by email
+        const user = await Users.findOne({email})
+        if(!user){
+            return res.status(404).json({
+                "status": "fail",
+                "code" : "404",
+                "message": "user not found",
+            })
+        }
+
+        //add user to team
+        const team = await Teams.findOneAndUpdate(
+            {id : team_id},
+            {
+                $addToSet: {
+                    members: {
+                        _id: user._id,
+                        email: user.email,
+                        role: role 
+                    }
+                }
+            },
+            {new: true} 
+        )
+
+
         // Send invitation link 
         await transporter.sendMail({
             from: '"CoddyGame 🚀" <coddygame1@gmail.com>',
             to: email,
-            subject: "Team Invitation - Join Now!",
+            subject: `Team Invitation`,
             html: `
-                <h1>Join ${req.team.name} as a ${role} at CoddyGame 🚀</h1>
-                <p>You have been invited to join the team ${req.team.name}. Click below to accept your invitation:</p>
-                <a href="${process.env.BASE_URI}/api/teams/${req.team._id}/members/accept-invitation?token=${token}">
-                  invitation link 
+                <h1> you are now ${role} of ${req.team.name} team at CoddyGame 🚀</h1>
+                <a href="${process.env.FRONTEND_URI}/teams/${team_id}/workplace">
+                  let us work 🚀
                 </a>
             `,
         });
@@ -56,15 +73,6 @@ const inviteUser = async (req,res,next) => {
             "status": "success",
             "code" : "201",
             "message": "invitation has been sent successfully",
-            "resource" : "invitations",
-            "invitation": {
-                "_id": invitation._id,
-                "email": invitation.email,
-                "role": invitation.role,
-                "status": "pending",
-                "expiresAt": invitation.expiresAt
-            },
-            "nextUri" : `${process.env.BASE_URI}/api/teams/${team_id}/members/invitations`
         })
 
     } catch (error) {
@@ -74,149 +82,11 @@ const inviteUser = async (req,res,next) => {
 }
 
 
-const acceptInvitation = async (req,res,next) => {
-    try {
-        const token = req.query.token
-        const team_id = req.params.team_id
-
-        if(req.amITeamMember){
-            return res.status(400).json({
-                "status": "fail",
-                "code" : "400",
-                "message": "you are already a member of this team",
-                "resource" : "teams",
-            })
-        }
-
-        const invitation = await Invitations.findOneAndUpdate({
-            token,
-            team_id : req.team._id,
-            status : "pending",
-            expiresAt : {$gt : new Date(Date.now())}
-        },
-        {$set : {status : "accepted"}},
-        {new : true})
-
-        if(!invitation){
-            return res.status(400).json({
-                "status": "fail",
-                "code" : "400",
-                "message": "invalid or expired invitation",
-                "resource" : "invitations",
-            })
-        }
-
-        await Teams.findOneAndUpdate(
-            { _id: team_id },
-            {
-              $addToSet: {
-                members: {
-                  _id: req.user.id,               
-                  email: invitation.email,
-                  role: invitation.role
-                }
-              }
-            }
-          );
-
-        await Invitations.deleteMany({status : "pending" , team_id : req.team._id , email : invitation.email})  
-
-        return res.status(200).json({
-            "status": "success",
-            "code" : "200",
-            "message": "invitation has been accepted successfully",
-            "resource" : "invitations",
-            "nextUri" : `${process.env.BASE_URI}/api/teams/${team_id}`,
-        })
-
-    } catch (error) {
-        console.log(error)
-        next(error)
-    }
-}
 
 
-const listInvitations = async (req,res,next) => {
-    try {
-        const allowedStatus = ["pending","accepted","rejected","cancelled"]
-        const status = req.query.status || "all"
-
-        if(!allowedStatus.includes(status) && status !== "all"){
-            return res.status(400).json({
-                "status": "fail",
-                "code" : "400",
-                "message": "invalid query parameter",
-                "parameters" : {
-                    "status" : status
-                },
-                "fix" : `status parameter can be either ${allowedStatus}`,
-                "resource" : "invitations",
-            })
-        }
-
-        const invitations = await Invitations.find({
-            team_id : req.team._id,
-            status : status === "all" ? { $in: allowedStatus } : status,
-        }).select("email status role expiresAt")
-
-        if(invitations.length === 0){
-            return res.status(404).json({
-                "status": "fail",
-                "code" : "404",
-                "message": "no invitations found",
-                "resource" : "invitations",
-            })
-        }
-
-        return res.status(200).json({
-            "status": "success",
-            "code" : "200",
-            "message": "invitations fetched successfully",
-            "resource" : "invitations",
-            "data": {
-                invitations
-            }
-        })
-    } catch (error) {
-        console.log(error)
-        next(error)
-    }
-}
 
 
-const cancelInvitation = async (req,res,next) => {
-    try {
-        const invitation_id = req.params.invitation_id
-        const team_id = req.params.team_id
 
-        const invitation = await Invitations.findOneAndUpdate({
-            _id : invitation_id,
-            team_id : req.team._id,
-            status : "pending"
-        }, {$set : {status : "cancelled"}}, {new : true})
-
-        if(!invitation){
-            return res.status(404).json({
-                "status": "fail",
-                "code" : "404",
-                "message": "invitation not found",
-                "resource" : "invitations",
-            })
-        }
-
-        return res.status(200).json({
-            "status": "success",
-            "code" : "200",
-            "message": "invitation has been cancelled successfully",
-            "resource" : "invitations",
-            "nextUri" : `${process.env.BASE_URI}/api/teams/${team_id}/members/invitations`
-        })  
-
-    } catch (error) {
-        console.log(error)
-        next(error)
-    }
-}
 
 
 //members mangment
@@ -757,9 +627,6 @@ const memberInfo = async (req,res,next) => {
 
 module.exports = {
     inviteUser,
-    acceptInvitation,
-    listInvitations,
-    cancelInvitation,
     listTeamMembers,
     changeMemberRole,
     kickMember,

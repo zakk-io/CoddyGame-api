@@ -105,17 +105,14 @@ const googleOAuth2Callback = async (req,res,next) => {
 
         const authToken = jwt.sign(payload, process.env.JWT_SECRET,{expiresIn : "7d"})
         res.cookie("authToken", authToken, {
-            httpOnly: true,
+            httpOnly: false,
             secure: false, // Set to true (in production)
             sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000 
         })
 
-        return res.status(200).json({
-            "status": "success",
-            "code" : "200",
-            "authToken": authToken,
-        })
+        return res.redirect(process.env.FRONTEND_URI);
+
 
     } catch (error) {
         console.log(error)
@@ -222,17 +219,14 @@ const linkedinOAuth2Callback = async (req,res,next) => {
 
         const authToken = jwt.sign(payload, process.env.JWT_SECRET,{expiresIn : "7d"})
         res.cookie("authToken", authToken, {
-            httpOnly: true,
+            httpOnly: false,
             secure: false, // Set to true (in production)
             sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000 
         })
 
-        return res.status(200).json({
-            "status": "success",
-            "code" : "200",
-            "authToken": authToken,
-        })
+        return res.redirect(process.env.FRONTEND_URI);
+
 
     } catch (error) {
         console.log(error)

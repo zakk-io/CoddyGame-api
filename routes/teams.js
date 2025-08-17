@@ -16,9 +16,6 @@ const {
 //members
 const { 
     inviteUser,
-    acceptInvitation,
-    listInvitations,
-    cancelInvitation,
     listTeamMembers,
     changeMemberRole , 
     kickMember,
@@ -73,7 +70,6 @@ const {
 
 
 //no auth check
-router.get('/api/teams/:team_id/members/accept-invitation',[isTeamExists,amITeamMember("")],acceptInvitation);
 router.get('/api/teams/:team_id/resources/:resource_id',[isTeamExists,checkMembership("public"),isResourceExists],getResource);
 router.get('/api/teams/:team_id',[isTeamExists,checkMembership("public")],getTeam);
 //workplace
@@ -90,8 +86,6 @@ router.post('/api/teams/:team_id/send-email',isTeamExists,checkMembership(""),ch
 //members
 //invitations functionality
 router.post('/api/teams/:team_id/members/invitations',[isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"]),isEmailInTeam(),inviteUserRateLimit],inviteUser);
-router.get('/api/teams/:team_id/members/invitations',isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"]),listInvitations);
-router.get('/api/teams/:team_id/members/invitations/:invitation_id',isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"]),cancelInvitation);
 //members mangment
 router.get('/api/teams/:team_id/members/me',isTeamExists,checkMembership(""),checkAuthorization(""),memberInfo);
 router.get('/api/teams/:team_id/members',isTeamExists,checkMembership(""),checkAuthorization(""),listTeamMembers);
