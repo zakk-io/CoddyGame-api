@@ -84,41 +84,41 @@ const getTeam = async (req,res,next) => {
     }
 }
 
-const listPublicTeams = async (req,res,next) => {
-    try {
-        const teams = await Teams.find({type : "public"})
-        if(!teams || teams.length === 0){
-            return res.status(404).json({
-                "status": "fail",
-                "code" : "404",
-                "message": "No public teams found",
-                "resource" : "teams"
-            })
-        }
-        
-        return res.status(200).json({
-            "status": "success",
-            "code" : "200",
-            "resource" : "teams",
-            "count" : teams.length,
-            "teams": teams.map((team) => {
-                return {
-                    "id": team.id,
-                    "name": team.name,
-                    "type": team.type,
-                    "description": team.description,
-                    "avatar" : team.avatar,
-                    "createdAt": team.createdAt
-                }
-            })
-        })
+const listPublicTeams = async (req, res, next) => {
+  try {
+    const teams = await Teams.find({
+      type: "public",
+      "members._id": { $ne: req.user.id }   // exclude teams the user is already in
+    });
 
-    } catch (error) {
-        console.error(error)
-        next(error) 
-        
+    if (!teams || teams.length === 0) {
+      return res.status(404).json({
+        status: "fail",
+        code: "404",
+        message: "No public teams found",
+        resource: "teams"
+      });
     }
-}
+
+    return res.status(200).json({
+      status: "success",
+      code: "200",
+      resource: "teams",
+      count: teams.length,
+      teams: teams.map(team => ({
+        id: team.id,
+        name: team.name,
+        type: team.type,
+        description: team.description,
+        avatar: team.avatar,
+        createdAt: team.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
 
 const listUserTeams = async (req,res,next) => {
     try {
@@ -285,6 +285,8 @@ const sendEmail = async (req,res,next) => {
         next(error)  
     }
 }
+
+
 
 
 

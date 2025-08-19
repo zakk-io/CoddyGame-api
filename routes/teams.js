@@ -69,6 +69,7 @@ const {
 } = require("../middlewares/teams")
 
 
+router.get('/api/teams/public',[authMiddleware],listPublicTeams);
 //no auth check
 router.get('/api/teams/:team_id/resources/:resource_id',[isTeamExists,checkMembership("public"),isResourceExists],getResource);
 router.get('/api/teams/:team_id',[isTeamExists,checkMembership("public")],getTeam);
@@ -76,7 +77,6 @@ router.get('/api/teams/:team_id',[isTeamExists,checkMembership("public")],getTea
 router.use(authMiddleware)
 router.post('/api/teams',[createTeamRateLimit],createTeam);
 router.get('/api/teams',listUserTeams);
-router.get('/api/teams/public',listPublicTeams);
 router.put('/api/teams/:team_id',[isTeamExists,checkMembership(""),checkAuthorization(["leader","co-leader"])],updateTeam);
 router.delete('/api/teams/:team_id',[isTeamExists,checkMembership(""),checkAuthorization(["leader"])],deleteTeam);
 router.get('/api/teams/:team_id/leave',isTeamExists,checkMembership(""),checkAuthorization(["co-leader","editor","viewer"]),leaveTeam);
