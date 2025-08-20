@@ -111,7 +111,7 @@ const googleOAuth2Callback = async (req,res,next) => {
             maxAge: 7 * 24 * 60 * 60 * 1000 
         })
 
-        return res.redirect(process.env.FRONTEND_URI);
+        return res.redirect(`${process.env.FRONTEND_URI}?authToken=${authToken}`);
 
 
     } catch (error) {
