@@ -106,8 +106,8 @@ const googleOAuth2Callback = async (req,res,next) => {
         const authToken = jwt.sign(payload, process.env.JWT_SECRET,{expiresIn : "7d"})
         res.cookie("authToken", authToken, {
             httpOnly: false,
-            secure: false, // Set to true (in production)
-            sameSite: "None",
+            secure: true, // Set to true (in production)
+            sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000 
         })
 
