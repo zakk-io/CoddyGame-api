@@ -110,20 +110,17 @@ io.on("connection", async (socket) =>{
 
 
 
-
-
-
-
-
-app.get('/accounts/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public','authentication','login.html'));
+app.get('/api/auth/me', (req, res) => {
+  const token = req.cookies.authToken;
+  if (!token) return res.status(401).json({ authenticated: false });
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+    res.json({ authenticated: true, user });
+  } catch {
+    res.status(401).json({ authenticated: false });
+  }
 });
 
-
-
-app.get('/accounts/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public','authentication','register.html'));
-});
 
 
 
