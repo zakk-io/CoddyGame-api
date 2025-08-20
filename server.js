@@ -24,7 +24,8 @@ mongoose.connect(process.env.MONGO_URI).then(() => console.log('mongodb connecte
 
 app.use(cors({
     origin: process.env.FRONTEND_URI,    
-    credentials: true,                  
+    credentials: true,      
+    methods: ['GET','POST','PATCH','DELETE','OPTIONS']            
 }));
 
 
@@ -115,12 +116,11 @@ app.get('/api/auth/me', (req, res) => {
   if (!token) return res.status(401).json({ authenticated: false });
   try {
     const user = jwt.verify(token, process.env.JWT_SECRET);
-    res.json({ authenticated: true, user });
+    return res.json({ authenticated: true, user });
   } catch {
-    res.status(401).json({ authenticated: false });
+    return res.status(401).json({ authenticated: false });
   }
 });
-
 
 
 
