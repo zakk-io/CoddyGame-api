@@ -25,7 +25,7 @@ const teamsRoutes = require("./routes/teams")
 mongoose.connect(process.env.MONGO_URI).then(() => console.log('mongodb connected!'));
 
 app.use(cors({
-    origin: process.env.FRONTEND_URI,    
+    origin: "https://coddygame-client.onrender.com",    
     credentials: true,      
     methods: ['GET','POST','PATCH','DELETE','OPTIONS']            
 }));
