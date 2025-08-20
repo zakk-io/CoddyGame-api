@@ -217,10 +217,6 @@ const kickMember = async (req,res,next) => {
             })
         }
   
-        await Invitations.deleteMany({
-            team_id : req.team._id,
-            email : req.idMember.email,
-        })
 
         await joinTeamRequestsModel.deleteMany({
             team_id : req.team._id,
