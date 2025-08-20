@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require("cors")
 const {Server} = require("socket.io")
 const http = require("http")
+app.set('trust proxy', 1);  
 
 const app = express()
 const server = http.createServer(app)
@@ -112,15 +113,31 @@ io.on("connection", async (socket) =>{
 app.use(cookieparser())
 
 app.get('/api/auth/me', (req, res) => {
-  const token = req.cookies.authToken;
-  if (!token) return res.status(401).json({ authenticated: false });
+  const token = req.cookies?.authToken;
+  if (!token) return res.status(401).json({ authenticated: false, reason: 'no_cookie' });
+
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    return res.status(500).json({ authenticated: false, reason: 'missing_JWT_SECRET' });
+  }
+
   try {
-    const user = jwt.verify(token, process.env.JWT_SECRET);
+    const user = jwt.verify(token, secret);  // will throw on invalid signature/expired
     return res.json({ authenticated: true, user });
-  } catch {
-    return res.status(401).json({ authenticated: false });
+  } catch (err) {
+    // Helpful diagnostics (safe to return briefly)
+    return res.status(401).json({
+      authenticated: false,
+      reason: 'verify_failed',
+      error: err?.name || 'JwtError',
+      message: err?.message || 'invalid token',
+      // decode WITHOUT verifying so we can see payload/alg
+      decoded: jwt.decode(token) || null,
+      secret_len: secret.length
+    });
   }
 });
+
 
 
 
