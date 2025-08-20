@@ -109,7 +109,7 @@ io.on("connection", async (socket) =>{
 //socket.io
 
 
-
+app.use(cookieparser())
 
 app.get('/api/auth/me', (req, res) => {
   const token = req.cookies.authToken;
@@ -126,7 +126,6 @@ app.get('/api/auth/me', (req, res) => {
 
 // Middlewares
 app.use(express.json());
-app.use(cookieparser())
 app.use(express.static('public'));
 app.use(authRoutes)
 app.use(teamsRoutes)
