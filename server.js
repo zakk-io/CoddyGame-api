@@ -3,12 +3,13 @@ const mongoose = require('mongoose');
 const cors = require("cors")
 const {Server} = require("socket.io")
 const http = require("http")
-app.set('trust proxy', 1);  
+ 
 
 const app = express()
 const server = http.createServer(app)
 
 const cookieparser = require("cookie-parser")
+app.set('trust proxy', 1); 
 
 require("dotenv").config()
 const path = require('path');
