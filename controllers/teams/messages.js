@@ -37,7 +37,7 @@ const createMessage = async (req, res,next) => {
 
 
 
-const getMessages = async (req, res) => {
+const getMessages = async (req, res, next) => {
     try {
         const {resource_id} = req.params
 
@@ -58,7 +58,7 @@ const getMessages = async (req, res) => {
 
 
 
-const senderId = async (req,res) => {
+const senderId = async (req,res,next) => {
     try {
         return res.status(200).json({
             "status": "success",

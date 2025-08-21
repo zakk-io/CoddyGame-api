@@ -16,7 +16,9 @@ const path = require('path');
 const {jsonValidtion,validationError,valueDublictionsError,validateObjectId,CastError} = require("./middlewares/errorshandlers")
 const {authMiddleware} = require("./middlewares/authentication")
 const authRoutes = require("./routes/auth")
-const teamsRoutes = require("./routes/teams")
+const teamsRoutes = require("./routes/teams");
+const { env } = require('process');
+const e = require('express');
 
 
 
@@ -24,8 +26,10 @@ const teamsRoutes = require("./routes/teams")
 // mongodb connection
 mongoose.connect(process.env.MONGO_URI).then(() => console.log('mongodb connected!'));
 
+const FRONTEND_URI = process.env.FRONTEND_URI || 'https://coddygame-client.onrender.com';
+
 app.use(cors({
-    origin: "https://coddygame-client.onrender.com",    
+    origin: FRONTEND_URI,    
     credentials: true,      
     methods: ['GET','POST','PATCH','DELETE','OPTIONS']            
 }));
@@ -33,7 +37,8 @@ app.use(cors({
 
 const io = new Server(server, {
     cors: {
-        origin: process.env.FRONTEND_URI,  
+        origin: FRONTEND_URI,  
+        credentials: true,
         methods: ["GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"]
     }
 });
@@ -113,33 +118,6 @@ io.on("connection", async (socket) =>{
 
 app.use(cookieparser())
 
-app.get('/api/auth/me', (req, res) => {
-  const token = req.cookies?.authToken;
-  if (!token) return res.status(401).json({ authenticated: false, reason: 'no_cookie' });
-
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    return res.status(500).json({ authenticated: false, reason: 'missing_JWT_SECRET' });
-  }
-
-  try {
-    const user = jwt.verify(token, secret);  // will throw on invalid signature/expired
-    return res.json({ authenticated: true, user });
-  } catch (err) {
-    // Helpful diagnostics (safe to return briefly)
-    return res.status(401).json({
-      authenticated: false,
-      reason: 'verify_failed',
-      error: err?.name || 'JwtError',
-      message: err?.message || 'invalid token',
-      // decode WITHOUT verifying so we can see payload/alg
-      decoded: jwt.decode(token) || null,
-      secret_len: secret.length
-    });
-  }
-});
-
-
 
 
 // Middlewares
@@ -164,8 +142,9 @@ app.use(valueDublictionsError)
 app.use(CastError)
 
 
+const PORT = process.env.PORT || 3000;
 
-server.listen(3000, () => {
-    console.log(`Server is running on port 3000`);
+server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
 
